@@ -1,0 +1,332 @@
+# Master Requirements - iOS Gym Tracking App
+
+## Application Architecture
+
+### Navigation Structure
+- Bottom navigation with 5 tabs: Profile, History, Workout, Exercises, Insights
+- Each tab represents a distinct functional area of the app
+- Insights tab replaced Store tab to house AI-powered workout intelligence
+
+## Detailed Feature Specifications
+
+### 1. Profile Tab
+#### Visual Elements
+- [ ] Profile picture upload functionality
+- [ ] Customizable name field
+- [ ] Free-text goal setting field
+- [ ] Dashboard displaying workouts per week
+
+#### Functional Requirements
+- [ ] No login/authentication required (local profile only)
+- [ ] Profile picture storage in local device
+- [ ] Workout frequency tracking and display
+- [ ] Goal persistence across app sessions
+
+#### Technical Implementation
+- [ ] Local storage for profile data
+- [ ] Image picker integration for profile photos
+- [ ] Weekly workout counter with date range calculations
+
+### 2. History Tab
+#### Visual Elements
+- [ ] Scrollable list of workout sessions
+- [ ] Calendar view for date-based navigation
+- [ ] Workout session blocks showing:
+  - Workout name
+  - Date
+  - Duration
+  - Exercises performed
+  - Sets, reps, and weights
+
+#### Functional Requirements
+- [ ] Chronological workout history
+- [ ] Calendar integration with workout indicators on completed dates
+- [ ] Dual navigation: scroll through list OR select from calendar
+- [ ] Detailed workout session view
+
+#### Technical Implementation
+- [ ] Local database for workout history
+- [ ] Calendar component with custom date indicators
+- [ ] Efficient scrolling for large workout histories
+
+### 3. Workout Tab
+#### Visual Elements
+- [ ] Tile-based display for workout templates
+- [ ] Custom folder organization for templates
+- [ ] "Start Empty Workout" option
+- [ ] Active workout modal overlay
+
+#### Functional Requirements
+- [ ] Custom user-created folders for organizing workout templates
+- [ ] Template management (create, edit, delete folders and templates)
+- [ ] Empty workout creation capability
+- [ ] Active workout session management
+
+#### Active Workout Session Features
+- [ ] Session duration timer
+- [ ] Current date display
+- [ ] Editable workout name
+- [ ] Exercise addition/removal functionality
+- [ ] Modal-based workout interface
+- [ ] All exercises visible in single view (no page navigation)
+
+#### Exercise Selection Process
+- [ ] Popup/modal for exercise selection
+- [ ] Exercise list with name and detailed muscle group information
+- [ ] Future: Exercise images (placeholder for now)
+
+#### Technical Implementation
+- [ ] Template storage system with folder hierarchy
+- [ ] Timer functionality for workout duration
+- [ ] Modal UI components for workout session
+- [ ] Real-time exercise data entry
+
+### 4. Exercises Tab
+#### Visual Elements
+- [ ] Comprehensive exercise database display
+- [ ] Exercise name and detailed muscle group information
+- [ ] Future: Exercise demonstration images
+
+#### Functional Requirements
+- [ ] Pre-populated exercise database
+- [ ] Detailed muscle group categorization
+- [ ] Exercise search and filtering capabilities
+- [ ] Exercise information display
+
+#### Technical Implementation
+- [ ] Pre-loaded exercise database
+- [ ] Detailed muscle group taxonomy
+- [ ] Search and filter functionality
+
+### 5. Insights Tab
+#### AI-Powered Workout Intelligence
+- [x] Comprehensive exercise performance analysis
+- [x] AI-powered workout predictions and recommendations
+- [x] Historical exercise data analysis to influence future workouts
+- [x] Exercise comparison and progression tracking
+- [x] Multiple timeframe analysis (1W, 1M, 3M, 1Y)
+
+#### Visual Elements
+- [x] Dashboard with quick stats overview
+- [x] Exercise performance cards with scoring
+- [x] AI recommendation cards with priority indicators
+- [x] Exercise comparison side-by-side analysis
+- [x] Strength trend visualizations
+- [x] Progression timeline predictions
+
+#### Functional Requirements
+- [x] Real-time AI analysis of workout history
+- [x] Performance predictions for next workouts
+- [x] Progression timeline forecasting
+- [x] Exercise comparison within muscle groups
+- [x] Personalized recommendations based on training patterns
+- [x] Muscle group balance analysis
+- [x] Plateau detection and solution suggestions
+
+## Data Models
+
+### Exercise Database Schema
+- Exercise ID
+- Exercise Name
+- Primary Muscle Groups (detailed)
+- Secondary Muscle Groups (detailed)
+- Equipment Required
+- Difficulty Level
+- Future: Image URLs
+
+### Workout Template Schema
+- Template ID
+- Template Name
+- Folder ID (for organization)
+- Exercise List
+- Default Sets/Reps (optional)
+
+### Workout Session Schema
+- Session ID
+- Template ID (if used)
+- Session Name
+- Date
+- Duration
+- Exercises Performed
+- Sets, Reps, Weight for each exercise
+
+### User Profile Schema
+- Profile Picture Path
+- User Name
+- Goal Text
+- Weekly Workout Count
+- Profile Creation Date
+
+### AI Insights Schema
+- Exercise Performance Metrics
+- Strength Trends (Volume, Strength, Endurance)
+- Progression Predictions
+- Exercise Comparisons
+- Recommendation History
+- Model Confidence Scores
+
+## Technical Requirements
+
+### Platform
+- [x] iOS native application
+- [x] SwiftUI for modern UI development
+- [x] Local data storage (Core Data)
+- [x] Core ML for on-device AI processing
+- [x] CreateML for model training (macOS development)
+
+### Data Persistence
+- [x] Local storage only (no cloud sync initially)
+- [x] Core Data for complex relational data
+- [x] UserDefaults for simple profile settings
+- [x] On-device AI model storage and inference
+
+### AI Implementation
+- [x] WorkoutPerformancePrediction service for AI insights
+- [x] ExerciseInsightsService for comprehensive analysis
+- [x] CoreMLModelManager for model training and inference
+- [x] Algorithmic fallbacks for iOS devices (no CreateML dependency)
+- [x] Real-time performance predictions
+- [x] Historical data analysis and trend detection
+
+### Performance
+- [ ] Smooth modal transitions
+- [ ] Efficient list scrolling for large datasets
+- [ ] Quick workout session startup
+
+### User Experience
+- [ ] Intuitive navigation flow
+- [ ] Minimal taps to start workout
+- [ ] Clear visual feedback for all actions
+- [ ] Consistent design language across tabs
+
+## Monetization Strategy
+
+### Hybrid Freemium Model
+#### Three-Tier Pricing Structure
+
+### **FREE TIER**
+*"Get Started with Smart Workout Tracking"*
+
+#### Core Features
+- [ ] Track up to 3 exercises per workout
+- [ ] Basic set/rep/weight logging
+- [ ] 30-day workout history
+- [ ] Simple exercise library (50 exercises)
+- [ ] Basic progress charts
+- [ ] Basic performance scores (overall rating only)
+- [ ] Simple AI insights
+- [ ] 1 AI recommendation per week
+- [ ] Basic rest timer
+
+#### Restrictions
+- [ ] Only current month data visible
+- [ ] No detailed predictions
+- [ ] No exercise comparisons
+- [ ] No data export
+- [ ] Non-intrusive ads displayed
+
+### **PREMIUM TIER - $6.99/month**
+*"Unlock Advanced Workout Intelligence"*
+
+#### Enhanced Tracking
+- [ ] Unlimited exercises per workout
+- [ ] Unlimited workout history
+- [ ] Custom exercise creation
+- [ ] Complete exercise library (200+ exercises)
+- [ ] Workout templates and folders
+- [ ] Advanced analytics dashboard
+
+#### AI Insights
+- [ ] Detailed performance predictions
+- [ ] Progression timelines
+- [ ] Exercise comparisons within muscle groups
+- [ ] Strength trend analysis (volume, strength, endurance)
+- [ ] Multiple timeframes (1W, 1M, 3M, 1Y)
+- [ ] Unlimited AI recommendations
+
+#### Premium Features
+- [ ] Data export (CSV, PDF reports)
+- [ ] Dark mode & themes
+- [ ] Cloud backup & sync
+- [ ] Advanced rest timer with AI suggestions
+- [ ] No ads
+- [ ] Workout sharing
+
+### **AI COACH TIER - $24.99/month**
+*"Your Personal AI Fitness Coach"*
+
+#### AI Workout Programming
+- [ ] Personalized workout plans generated weekly
+- [ ] Adaptive programming based on progress
+- [ ] Periodization planning (strength, hypertrophy, cutting cycles)
+- [ ] Auto-progression recommendations
+- [ ] Deload week scheduling
+
+#### Advanced AI Features
+- [ ] Form analysis using phone camera + AI
+- [ ] Real-time coaching during workouts
+- [ ] Recovery optimization (rest day suggestions)
+- [ ] Volume auto-regulation based on performance
+- [ ] Plateau detection & solutions
+
+#### Health Integration
+- [ ] Apple Health/Google Fit deep integration
+- [ ] Sleep & recovery analysis
+- [ ] Heart rate zone recommendations
+- [ ] Nutrition timing suggestions
+- [ ] Stress level impact analysis
+
+#### Premium Coaching
+- [ ] Weekly progress reports with insights
+- [ ] Goal setting & tracking (strength, physique, endurance)
+- [ ] Competition prep planning
+- [ ] Injury prevention alerts
+- [ ] Priority support (24hr response)
+
+### Revenue Projections
+
+#### Target Metrics (18-month goal)
+- **Total Users**: 25,000
+- **Premium Conversion**: 5% (1,250 users)
+- **AI Coach Conversion**: 1.5% (375 users)
+- **Monthly Revenue Target**: $18,109
+- **Annual Revenue Target**: $217,308
+
+#### User Acquisition Targets
+| Timeline | Users | Premium | AI Coach | Monthly Revenue |
+|----------|-------|---------|----------|----------------|
+| 6 months | 7,000 | 350 | 105 | $5,069 |
+| 12 months | 15,000 | 750 | 225 | $10,869 |
+| 18 months | 25,000 | 1,250 | 375 | $18,109 |
+
+### Implementation Priority
+
+#### Phase 1 (Months 1-2)
+- [ ] Free tier core features
+- [ ] Premium upgrade flow
+- [ ] Basic AI insights paywall
+- [ ] Subscription management (StoreKit 2)
+
+#### Phase 2 (Months 3-4)
+- [ ] AI Coach tier
+- [ ] Workout plan generation
+- [ ] Advanced analytics dashboard
+- [ ] Data export functionality
+
+#### Phase 3 (Months 5-6)
+- [ ] Form analysis with camera
+- [ ] Health app integration
+- [ ] Recovery optimization
+- [ ] Competition prep features
+
+## Future Enhancements
+- [ ] Exercise demonstration images
+- [ ] Social sharing features
+- [ ] Equipment affiliate partnerships
+- [ ] Enterprise features for trainers/gyms
+- [ ] Apple Watch companion app
+- [ ] Nutrition tracking integration
+
+---
+
+*This document captures the core requirements for the iOS gym tracking app with detailed specifications for each functional area and comprehensive monetization strategy.*

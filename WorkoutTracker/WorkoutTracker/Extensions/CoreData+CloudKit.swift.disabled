@@ -1,0 +1,385 @@
+import Foundation
+import CoreData
+
+// MARK: - CloudSyncable Protocol
+protocol CloudSyncable: AnyObject {
+    var cloudRecordID: String? { get set }
+    var lastCloudUpdate: Date? { get set }
+    var needsCloudSync: Bool { get set }
+}
+
+// MARK: - CloudKit Sync Metadata Store
+// Using a metadata approach since we can't modify Core Data model dynamically
+
+class CloudSyncMetadata {
+    static let shared = CloudSyncMetadata()
+    private var metadata: [String: [String: Any]] = [:]
+    
+    private init() {}
+    
+    func setCloudRecordID(_ recordID: String?, for object: NSManagedObject) {
+        let objectKey = objectKey(for: object)
+        if metadata[objectKey] == nil {
+            metadata[objectKey] = [:]
+        }
+        metadata[objectKey]?["cloudRecordID"] = recordID
+    }
+    
+    func getCloudRecordID(for object: NSManagedObject) -> String? {
+        let objectKey = objectKey(for: object)
+        return metadata[objectKey]?["cloudRecordID"] as? String
+    }
+    
+    func setLastCloudUpdate(_ date: Date?, for object: NSManagedObject) {
+        let objectKey = objectKey(for: object)
+        if metadata[objectKey] == nil {
+            metadata[objectKey] = [:]
+        }
+        metadata[objectKey]?["lastCloudUpdate"] = date
+    }
+    
+    func getLastCloudUpdate(for object: NSManagedObject) -> Date? {
+        let objectKey = objectKey(for: object)
+        return metadata[objectKey]?["lastCloudUpdate"] as? Date
+    }
+    
+    func setNeedsCloudSync(_ needsSync: Bool, for object: NSManagedObject) {
+        let objectKey = objectKey(for: object)
+        if metadata[objectKey] == nil {
+            metadata[objectKey] = [:]
+        }
+        metadata[objectKey]?["needsCloudSync"] = needsSync
+    }
+    
+    func getNeedsCloudSync(for object: NSManagedObject) -> Bool {
+        let objectKey = objectKey(for: object)
+        return metadata[objectKey]?["needsCloudSync"] as? Bool ?? true
+    }
+    
+    private func objectKey(for object: NSManagedObject) -> String {
+        let entityName = object.entity.name ?? "Unknown"
+        let objectID = object.objectID.uriRepresentation().absoluteString
+        return "\(entityName)_\(objectID)"
+    }
+    
+    func getMetadata(objectKey: String) -> [String: Any]? {
+        return metadata[objectKey]
+    }
+    
+    func setMetadata(objectKey: String, key: String, value: Any) {
+        if metadata[objectKey] == nil {
+            metadata[objectKey] = [:]
+        }
+        metadata[objectKey]?[key] = value
+    }
+}
+
+// MARK: - CloudSyncable Protocol Implementation
+
+extension WorkoutSession: CloudSyncable {
+    var cloudRecordID: String? {
+        get { CloudSyncMetadata.shared.getCloudRecordID(for: self) }
+        set { CloudSyncMetadata.shared.setCloudRecordID(newValue, for: self) }
+    }
+    
+    var lastCloudUpdate: Date? {
+        get { CloudSyncMetadata.shared.getLastCloudUpdate(for: self) }
+        set { CloudSyncMetadata.shared.setLastCloudUpdate(newValue, for: self) }
+    }
+    
+    var needsCloudSync: Bool {
+        get { CloudSyncMetadata.shared.getNeedsCloudSync(for: self) }
+        set { CloudSyncMetadata.shared.setNeedsCloudSync(newValue, for: self) }
+    }
+}
+
+extension WorkoutTemplate: CloudSyncable {
+    var cloudRecordID: String? {
+        get { CloudSyncMetadata.shared.getCloudRecordID(for: self) }
+        set { CloudSyncMetadata.shared.setCloudRecordID(newValue, for: self) }
+    }
+    
+    var lastCloudUpdate: Date? {
+        get { CloudSyncMetadata.shared.getLastCloudUpdate(for: self) }
+        set { CloudSyncMetadata.shared.setLastCloudUpdate(newValue, for: self) }
+    }
+    
+    var needsCloudSync: Bool {
+        get { CloudSyncMetadata.shared.getNeedsCloudSync(for: self) }
+        set { CloudSyncMetadata.shared.setNeedsCloudSync(newValue, for: self) }
+    }
+    
+    // Additional property for template sharing
+    var isPublic: Bool {
+        get { 
+            let objectKey = "\(entity.name ?? "Unknown")_\(objectID.uriRepresentation().absoluteString)"
+            return CloudSyncMetadata.shared.getMetadata(objectKey: objectKey)?["isPublic"] as? Bool ?? false
+        }
+        set { 
+            let objectKey = "\(entity.name ?? "Unknown")_\(objectID.uriRepresentation().absoluteString)"
+            CloudSyncMetadata.shared.setMetadata(objectKey: objectKey, key: "isPublic", value: newValue)
+        }
+    }
+}
+
+extension UserProfile: CloudSyncable {
+    var cloudRecordID: String? {
+        get { CloudSyncMetadata.shared.getCloudRecordID(for: self) }
+        set { CloudSyncMetadata.shared.setCloudRecordID(newValue, for: self) }
+    }
+    
+    var lastCloudUpdate: Date? {
+        get { CloudSyncMetadata.shared.getLastCloudUpdate(for: self) }
+        set { CloudSyncMetadata.shared.setLastCloudUpdate(newValue, for: self) }
+    }
+    
+    var needsCloudSync: Bool {
+        get { CloudSyncMetadata.shared.getNeedsCloudSync(for: self) }
+        set { CloudSyncMetadata.shared.setNeedsCloudSync(newValue, for: self) }
+    }
+}
+
+extension Exercise: CloudSyncable {
+    var cloudRecordID: String? {
+        get { CloudSyncMetadata.shared.getCloudRecordID(for: self) }
+        set { CloudSyncMetadata.shared.setCloudRecordID(newValue, for: self) }
+    }
+    
+    var lastCloudUpdate: Date? {
+        get { CloudSyncMetadata.shared.getLastCloudUpdate(for: self) }
+        set { CloudSyncMetadata.shared.setLastCloudUpdate(newValue, for: self) }
+    }
+    
+    var needsCloudSync: Bool {
+        get { CloudSyncMetadata.shared.getNeedsCloudSync(for: self) }
+        set { CloudSyncMetadata.shared.setNeedsCloudSync(newValue, for: self) }
+    }
+}
+
+extension WorkoutExercise: CloudSyncable {
+    var cloudRecordID: String? {
+        get { CloudSyncMetadata.shared.getCloudRecordID(for: self) }
+        set { CloudSyncMetadata.shared.setCloudRecordID(newValue, for: self) }
+    }
+    
+    var lastCloudUpdate: Date? {
+        get { CloudSyncMetadata.shared.getLastCloudUpdate(for: self) }
+        set { CloudSyncMetadata.shared.setLastCloudUpdate(newValue, for: self) }
+    }
+    
+    var needsCloudSync: Bool {
+        get { CloudSyncMetadata.shared.getNeedsCloudSync(for: self) }
+        set { CloudSyncMetadata.shared.setNeedsCloudSync(newValue, for: self) }
+    }
+}
+
+extension TemplateExercise: CloudSyncable {
+    var cloudRecordID: String? {
+        get { CloudSyncMetadata.shared.getCloudRecordID(for: self) }
+        set { CloudSyncMetadata.shared.setCloudRecordID(newValue, for: self) }
+    }
+    
+    var lastCloudUpdate: Date? {
+        get { CloudSyncMetadata.shared.getLastCloudUpdate(for: self) }
+        set { CloudSyncMetadata.shared.setLastCloudUpdate(newValue, for: self) }
+    }
+    
+    var needsCloudSync: Bool {
+        get { CloudSyncMetadata.shared.getNeedsCloudSync(for: self) }
+        set { CloudSyncMetadata.shared.setNeedsCloudSync(newValue, for: self) }
+    }
+}
+
+extension Folder: CloudSyncable {
+    var cloudRecordID: String? {
+        get { CloudSyncMetadata.shared.getCloudRecordID(for: self) }
+        set { CloudSyncMetadata.shared.setCloudRecordID(newValue, for: self) }
+    }
+    
+    var lastCloudUpdate: Date? {
+        get { CloudSyncMetadata.shared.getLastCloudUpdate(for: self) }
+        set { CloudSyncMetadata.shared.setLastCloudUpdate(newValue, for: self) }
+    }
+    
+    var needsCloudSync: Bool {
+        get { CloudSyncMetadata.shared.getNeedsCloudSync(for: self) }
+        set { CloudSyncMetadata.shared.setNeedsCloudSync(newValue, for: self) }
+    }
+}
+
+// MARK: - Sync Status Helpers
+
+extension NSManagedObject {
+    
+    /// Marks the object as needing cloud synchronization
+    func markForCloudSync() {
+        if let syncable = self as? CloudSyncable {
+            syncable.needsCloudSync = true
+        }
+    }
+    
+    /// Marks the object as successfully synced to cloud
+    func markCloudSyncComplete(recordID: String) {
+        if let syncable = self as? CloudSyncable {
+            syncable.cloudRecordID = recordID
+            syncable.lastCloudUpdate = Date()
+            syncable.needsCloudSync = false
+        }
+    }
+    
+    /// Returns true if the object needs to be synced to cloud
+    var needsCloudSync: Bool {
+        return (self as? CloudSyncable)?.needsCloudSync ?? false
+    }
+    
+    /// Returns the cloud record ID if available
+    var cloudRecordID: String? {
+        return (self as? CloudSyncable)?.cloudRecordID
+    }
+    
+    /// Returns the last cloud update timestamp
+    var lastCloudUpdate: Date? {
+        return (self as? CloudSyncable)?.lastCloudUpdate
+    }
+}
+
+// MARK: - Core Data Model Validation
+
+extension NSManagedObjectContext {
+    
+    /// Validates that all CloudSyncable entities have the required properties
+    func validateCloudSyncProperties() -> [String] {
+        var missingProperties: [String] = []
+        
+        guard let model = persistentStoreCoordinator?.managedObjectModel else {
+            return ["No managed object model found"]
+        }
+        
+        for entity in model.entities {
+            guard let entityClass = NSClassFromString(entity.managedObjectClassName ?? "") as? NSManagedObject.Type else {
+                continue
+            }
+            
+            // Check if entity implements CloudSyncable
+            if entityClass is CloudSyncable.Type {
+                let requiredProperties = ["cloudRecordID", "lastCloudUpdate", "needsCloudSync"]
+                
+                for propertyName in requiredProperties {
+                    if entity.attributesByName[propertyName] == nil {
+                        missingProperties.append("\(entity.name ?? "Unknown"): \(propertyName)")
+                    }
+                }
+            }
+        }
+        
+        return missingProperties
+    }
+}
+
+// MARK: - Sync Conflict Resolution
+
+extension NSManagedObject {
+    
+    /// Compares the object with its cloud counterpart to detect conflicts
+    func hasConflictWithCloudRecord(_ cloudRecord: [String: Any]) -> Bool {
+        guard let lastUpdate = lastCloudUpdate,
+              let cloudModified = cloudRecord["lastModified"] as? Date else {
+            return false
+        }
+        
+        // If local object was modified after the cloud record, there's a conflict
+        return lastUpdate > cloudModified
+    }
+    
+    /// Resolves conflict by choosing the newer version
+    func resolveConflictWithCloudRecord(_ cloudRecord: [String: Any], strategy: ConflictResolutionStrategy = .lastWriterWins) {
+        switch strategy {
+        case .lastWriterWins:
+            resolveUsingLastWriterWins(cloudRecord)
+        case .userChoice:
+            // Would present UI for user to choose
+            break
+        case .merge:
+            resolveUsingMerge(cloudRecord)
+        }
+    }
+    
+    private func resolveUsingLastWriterWins(_ cloudRecord: [String: Any]) {
+        guard let cloudModified = cloudRecord["lastModified"] as? Date,
+              let localModified = lastCloudUpdate else { return }
+        
+        // If cloud record is newer, update local object
+        if cloudModified > localModified {
+            updateFromCloudRecord(cloudRecord)
+        }
+        // Otherwise, keep local changes and they'll be pushed to cloud
+    }
+    
+    private func resolveUsingMerge(_ cloudRecord: [String: Any]) {
+        // Implement field-by-field merge logic
+        // This would depend on the specific entity type and business rules
+        updateFromCloudRecord(cloudRecord)
+    }
+    
+    private func updateFromCloudRecord(_ cloudRecord: [String: Any]) {
+        // Update entity properties from cloud record
+        // This would be implemented differently for each entity type
+        if let syncable = self as? CloudSyncable {
+            syncable.lastCloudUpdate = cloudRecord["lastModified"] as? Date ?? Date()
+            syncable.needsCloudSync = false
+        }
+    }
+}
+
+// MARK: - Conflict Resolution Strategy
+
+enum ConflictResolutionStrategy {
+    case lastWriterWins
+    case userChoice
+    case merge
+}
+
+// MARK: - Batch Sync Operations
+
+extension NSManagedObjectContext {
+    
+    /// Returns all objects that need to be synced to the cloud
+    func objectsNeedingCloudSync() -> [NSManagedObject] {
+        var objects: [NSManagedObject] = []
+        
+        // Define all entity names that support cloud sync
+        let syncableEntities = ["WorkoutSession", "WorkoutTemplate", "UserProfile", "Exercise", "WorkoutExercise", "TemplateExercise", "Folder"]
+        
+        for entityName in syncableEntities {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
+            fetchRequest.predicate = NSPredicate(format: "needsCloudSync == YES")
+            
+            do {
+                let entityObjects = try fetch(fetchRequest)
+                objects.append(contentsOf: entityObjects)
+            } catch {
+                print("Error fetching \(entityName) objects for sync: \(error)")
+            }
+        }
+        
+        return objects
+    }
+    
+    /// Marks all objects of specified entity types for cloud sync
+    func markAllForCloudSync(entityNames: [String]? = nil) {
+        let entitiesToSync = entityNames ?? ["WorkoutSession", "WorkoutTemplate", "UserProfile", "Exercise", "WorkoutExercise", "TemplateExercise", "Folder"]
+        
+        for entityName in entitiesToSync {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
+            
+            do {
+                let objects = try fetch(fetchRequest)
+                for object in objects {
+                    object.markForCloudSync()
+                }
+            } catch {
+                print("Error marking \(entityName) objects for sync: \(error)")
+            }
+        }
+    }
+}

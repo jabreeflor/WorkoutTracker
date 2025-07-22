@@ -1,0 +1,102 @@
+# Phase 1 MVP Development Plan
+
+## Overview
+Build the core foundation of the iOS gym tracking app with essential workout tracking functionality.
+
+## Phase 1 Scope
+
+### 1. App Structure & Navigation
+- [ ] iOS SwiftUI project setup
+- [ ] Bottom tab navigation (5 tabs)
+- [ ] Basic tab views for Profile, History, Workout, Exercises, Store
+
+### 2. Core Data Models
+- [ ] Exercise entity (ID, name, primary muscle group, secondary muscle group)
+- [ ] WorkoutSession entity (ID, name, date, duration, exercises)
+- [ ] WorkoutExercise entity (exercise reference, sets, reps, weight)
+- [ ] UserProfile entity (name, workout count)
+
+### 3. Exercise Database
+- [ ] Pre-populate ~50 common exercises
+- [ ] Basic muscle group categorization
+- [ ] Exercise data seeding on first app launch
+
+### 4. Workout Tab (Core Functionality)
+- [ ] "Start Empty Workout" button
+- [ ] Basic workout session creation
+- [ ] Add exercises to workout (simple list selection)
+- [ ] Input sets, reps, weight for each exercise
+- [ ] Save completed workout
+- [ ] Cancel workout option
+
+### 5. History Tab (Basic)
+- [ ] List view of completed workouts
+- [ ] Show workout name, date, duration
+- [ ] Basic workout detail view
+- [ ] Chronological ordering (newest first)
+
+### 6. Profile Tab (Basic)
+- [ ] Display user name (editable)
+- [ ] Show total workouts completed
+- [ ] Basic stats display
+
+### 7. Exercises Tab (Basic)
+- [ ] List all available exercises
+- [ ] Show exercise name and primary muscle group
+- [ ] Simple search functionality
+
+### 8. Store Tab (Placeholder)
+- [ ] Simple "Coming Soon" placeholder screen
+
+## Technical Implementation Priority
+
+### Week 1: Foundation
+1. Create iOS SwiftUI project
+2. Set up Core Data stack
+3. Create basic navigation structure
+4. Define data models
+
+### Week 2: Data & Exercises
+1. Implement exercise database seeding
+2. Build Exercises tab with list view
+3. Add basic search functionality
+4. Create exercise selection components
+
+### Week 3: Workout Core
+1. Implement workout session creation
+2. Build exercise addition flow
+3. Create sets/reps/weight input interface
+4. Add workout save/cancel functionality
+
+### Week 4: History & Profile
+1. Implement workout history display
+2. Build basic profile functionality
+3. Add workout detail views
+4. Polish UI and test core flows
+
+## Success Criteria
+- [ ] User can start an empty workout
+- [ ] User can add exercises from database
+- [ ] User can input sets, reps, weight
+- [ ] User can save and view workout history
+- [ ] User can see their profile stats
+- [ ] App handles basic error scenarios
+
+## Out of Scope for Phase 1
+- Workout templates
+- Custom folders
+- Calendar integration
+- Profile photos
+- Advanced analytics
+- Modal workout interface
+- Exercise images
+- Complex muscle group details
+
+## Next Phase Preparation
+- Document user feedback from Phase 1
+- Identify most requested features
+- Plan Phase 2 template system architecture
+
+---
+
+*This plan focuses on delivering a functional MVP that validates core workout tracking concepts.*
