@@ -71,7 +71,12 @@ struct EnhancedExerciseView: View {
             
             // Rest timer (if active)
             if setTrackingService.restTimerService.isActive {
-                RestTimerView(timerService: setTrackingService.restTimerService)
+                RestTimerView(
+                    timerService: setTrackingService.restTimerService,
+                    onMinusPressed: {
+                        uncompleteLastCompletedSet()
+                    }
+                )
             }
             
             // Exercise summary
@@ -81,6 +86,31 @@ struct EnhancedExerciseView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             setTrackingService.loadSets(for: exercise)
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func uncompleteLastCompletedSet() {
+        // Find the most recent completed set in this exercise and uncomplete it
+        var mostRecentIndex: Int?
+        var mostRecentTimestamp: Date?
+        
+        for (index, set) in setTrackingService.activeSets.enumerated() {
+            if set.completed, let timestamp = set.timestamp {
+                if mostRecentTimestamp == nil || timestamp > mostRecentTimestamp! {
+                    mostRecentIndex = index
+                    mostRecentTimestamp = timestamp
+                }
+            }
+        }
+        
+        if let index = mostRecentIndex {
+            setTrackingService.uncompleteSet(at: index)
+            
+            // Provide haptic feedback
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
         }
     }
     

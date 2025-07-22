@@ -173,6 +173,11 @@ struct WorkoutExerciseRow: View {
     // MARK: - Helper Properties
     
     private var categoryColor: Color {
+        // If all sets are completed, show green regardless of muscle group
+        if exerciseData.allSetsCompleted {
+            return .green
+        }
+        
         guard let primary = exerciseData.exercise.primaryMuscleGroup else { return .blue }
         
         switch primary.lowercased() {
@@ -347,6 +352,26 @@ struct EnhancedSetTrackingView: View {
         exerciseData.setData[index].targetReps = reps
         
         updateLegacyFields()
+    }
+    
+    private func uncompleteLastCompletedSet() {
+        // Find the most recent completed set and mark it as incomplete
+        for index in stride(from: exerciseData.setData.count - 1, through: 0, by: -1) {
+            if exerciseData.setData[index].completed {
+                exerciseData.setData[index].completed = false
+                exerciseData.setData[index].actualWeight = exerciseData.setData[index].targetWeight
+                exerciseData.setData[index].actualReps = exerciseData.setData[index].targetReps
+                exerciseData.setData[index].timestamp = nil
+                
+                updateExerciseProgress()
+                
+                // Provide haptic feedback to indicate the action
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
+                
+                break // Only uncomplete the most recent one
+            }
+        }
     }
 }
 

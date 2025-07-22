@@ -289,18 +289,20 @@ struct FormAnalysisResult {
 
 ### **Phase 3 - Advanced Features (COMPLETED ✅)**
 
-#### **Enhanced Set/Rep Tracking - COMPLETED ✅**
+#### **Enhanced Set/Rep Tracking - IMPROVED ✅**
 - ✅ **Individual Set Tracking**
-  - Set-by-set completion checkboxes with SetRowView component
-  - Per-set weight and rep logging with input validation
-  - Set completion status and timestamp tracking
+  - Inline set-by-set editing with intuitive weight/rep controls
+  - Quick increment/decrement buttons for rapid adjustments
+  - Per-set completion with visual feedback and status indicators
+  - Previous set comparison display for progressive tracking
   - Set failure handling with graceful degradation
 
 - ✅ **Advanced Input Methods**
-  - Quick number pad entry with real-time validation
+  - Inline number input with real-time validation (no modals!)
+  - One-tap editing for completed sets with instant feedback
+  - Quick adjustment buttons (+/- 2.5kg weight, +/- 1 rep)
   - Previous workout data pre-filling and comparison
-  - Target vs actual value tracking
-  - Increment/decrement buttons for quick adjustments
+  - Target vs actual value tracking with visual indicators
 
 - ✅ **Performance Tracking**
   - Set-by-set comparison to previous workouts

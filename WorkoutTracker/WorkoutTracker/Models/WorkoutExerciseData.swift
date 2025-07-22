@@ -52,6 +52,14 @@ public struct WorkoutExerciseData: Equatable {
         }
     }
     
+    var allSetsCompleted: Bool {
+        if isUsingEnhancedTracking {
+            return !setData.isEmpty && setData.allSatisfy { $0.completed }
+        } else {
+            return true // Legacy mode assumes completion
+        }
+    }
+    
     public static func == (lhs: WorkoutExerciseData, rhs: WorkoutExerciseData) -> Bool {
         return lhs.exercise.objectID == rhs.exercise.objectID &&
                lhs.sets == rhs.sets &&

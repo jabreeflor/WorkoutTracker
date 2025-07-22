@@ -62,8 +62,12 @@ struct WorkoutSessionView: View {
                 
                 // Rest Timer (if active)
                 if restTimerService.isActive {
-                    RestTimerView(timerService: restTimerService)
-                        .padding(.horizontal)
+                    RestTimerView(
+                        timerService: restTimerService,
+                        onMinusPressed: {
+                            uncompleteLastCompletedSet()
+                        }
+                    )
                 }
                 
                 // Exercise List
@@ -269,6 +273,37 @@ struct WorkoutSessionView: View {
         }
         
         return nil
+    }
+    
+    private func uncompleteLastCompletedSet() {
+        // Find the most recent completed set across all exercises and mark it as incomplete
+        var mostRecentCompletedSet: (exerciseIndex: Int, setIndex: Int, timestamp: Date)?
+        
+        for (exerciseIndex, exerciseData) in selectedExercises.enumerated() {
+            for (setIndex, setData) in exerciseData.setData.enumerated() {
+                if setData.completed, let timestamp = setData.timestamp {
+                    if mostRecentCompletedSet == nil || timestamp > mostRecentCompletedSet!.timestamp {
+                        mostRecentCompletedSet = (exerciseIndex, setIndex, timestamp)
+                    }
+                }
+            }
+        }
+        
+        // Uncomplete the most recent completed set
+        if let recentSet = mostRecentCompletedSet {
+            selectedExercises[recentSet.exerciseIndex].setData[recentSet.setIndex].completed = false
+            selectedExercises[recentSet.exerciseIndex].setData[recentSet.setIndex].actualWeight = selectedExercises[recentSet.exerciseIndex].setData[recentSet.setIndex].targetWeight
+            selectedExercises[recentSet.exerciseIndex].setData[recentSet.setIndex].actualReps = selectedExercises[recentSet.exerciseIndex].setData[recentSet.setIndex].targetReps
+            selectedExercises[recentSet.exerciseIndex].setData[recentSet.setIndex].timestamp = nil
+            
+            // Provide haptic feedback to indicate the action
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
+            
+            // Optional: Provide visual feedback
+            let notification = UINotificationFeedbackGenerator()
+            notification.notificationOccurred(.warning)
+        }
     }
     
 }
