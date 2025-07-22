@@ -81,34 +81,38 @@ struct WorkoutSessionView: View {
                     .padding()
                     Spacer()
                 } else {
-                    List {
-                        ForEach(Array(selectedExercises.enumerated()), id: \.offset) { index, exerciseData in
-                            WorkoutExerciseRow(
-                                exerciseData: Binding(
-                                    get: { 
-                                        guard index < selectedExercises.count else { 
-                                            return WorkoutExerciseData(exercise: exerciseData.exercise)
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(Array(selectedExercises.enumerated()), id: \.offset) { index, exerciseData in
+                                WorkoutExerciseRow(
+                                    exerciseData: Binding(
+                                        get: { 
+                                            guard index < selectedExercises.count else { 
+                                                return WorkoutExerciseData(exercise: exerciseData.exercise)
+                                            }
+                                            return selectedExercises[index] 
+                                        },
+                                        set: { newValue in
+                                            guard index < selectedExercises.count else { return }
+                                            print("DEBUG: Updating exercise at index \(index) - Sets: \(newValue.sets), Reps: \(newValue.reps), Weight: \(newValue.weight)")
+                                            selectedExercises[index] = newValue
                                         }
-                                        return selectedExercises[index] 
+                                    ),
+                                    previousWorkoutData: getPreviousWorkoutData(for: exerciseData.exercise),
+                                    isWorkoutActive: true,
+                                    onDelete: {
+                                        if index < selectedExercises.count {
+                                            selectedExercises.remove(at: index)
+                                        }
                                     },
-                                    set: { newValue in
-                                        guard index < selectedExercises.count else { return }
-                                        selectedExercises[index] = newValue
+                                    onRestTimerStart: { duration in
+                                        restTimerService.start(duration: TimeInterval(duration))
                                     }
-                                ),
-                                previousWorkoutData: getPreviousWorkoutData(for: exerciseData.exercise),
-                                isWorkoutActive: true,
-                                onDelete: {
-                                    if index < selectedExercises.count {
-                                        selectedExercises.remove(at: index)
-                                    }
-                                },
-                                onRestTimerStart: { duration in
-                                    restTimerService.start(duration: TimeInterval(duration))
-                                }
-                            )
+                                )
+                                .id("exercise-\(index)-\(exerciseData.exercise.objectID)")
+                            }
                         }
-                        .onDelete(perform: deleteExercises)
+                        .padding(.horizontal)
                     }
                 }
                 
@@ -138,7 +142,7 @@ struct WorkoutSessionView: View {
             .navigationTitle("Active Workout")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingExerciseSelection) {
-                ExerciseSelectionView(selectedExercises: $selectedExercises, exercises: Array(exercises))
+                ModernExerciseSelectionView(selectedExercises: $selectedExercises, exercises: Array(exercises))
             }
             .onAppear {
                 startTimer()
@@ -218,17 +222,22 @@ struct WorkoutSessionView: View {
             workoutExercise.exercise = exerciseData.exercise
             workoutExercise.workoutSession = workout
             
-            // Use enhanced tracking if set data exists
-            if !exerciseData.setData.isEmpty {
+            // Use enhanced tracking if available, otherwise fallback to legacy
+            if exerciseData.isUsingEnhancedTracking && !exerciseData.setData.isEmpty {
                 workoutExercise.isEnhancedTracking = true
-                workoutExercise.setData = exerciseData.setData
+                workoutExercise.setDataJSON = exerciseData.setData.toJSON()
                 workoutExercise.totalVolume = exerciseData.setData.totalVolume
+                // Update legacy fields for backward compatibility
+                workoutExercise.sets = Int32(exerciseData.setData.count)
+                workoutExercise.reps = Int32(exerciseData.setData.first?.targetReps ?? exerciseData.reps)
+                workoutExercise.weight = exerciseData.setData.first?.targetWeight ?? exerciseData.weight
             } else {
                 // Fallback to legacy tracking
                 workoutExercise.sets = Int32(exerciseData.sets)
                 workoutExercise.reps = Int32(exerciseData.reps)
                 workoutExercise.weight = exerciseData.weight
                 workoutExercise.isEnhancedTracking = false
+                workoutExercise.totalVolume = Double(exerciseData.sets) * Double(exerciseData.reps) * exerciseData.weight
             }
         }
         
@@ -262,62 +271,6 @@ struct WorkoutSessionView: View {
         return nil
     }
     
-    private func deleteExercises(offsets: IndexSet) {
-        selectedExercises.remove(atOffsets: offsets)
-    }
-}
-
-struct WorkoutExerciseData {
-    let exercise: Exercise
-    var sets: Int = 1
-    var reps: Int = 10
-    var weight: Double = 0.0
-    var setData: [SetData] = []
-    var isUsingEnhancedTracking: Bool = false
-    
-    init(exercise: Exercise) {
-        self.exercise = exercise
-        self.sets = 3
-        self.reps = 10
-        self.weight = 0.0
-        self.setData = []
-        self.isUsingEnhancedTracking = false
-    }
-    
-    mutating func enableEnhancedTracking() {
-        guard !isUsingEnhancedTracking else { return }
-        guard sets > 0 else { 
-            sets = 3 // Default to 3 sets if somehow 0
-            return 
-        }
-        
-        // Initialize set data based on current legacy values
-        setData = (1...sets).map { setNumber in
-            SetData(
-                setNumber: setNumber,
-                targetReps: max(1, reps), // Ensure at least 1 rep
-                targetWeight: max(0, weight) // Ensure non-negative weight
-            )
-        }
-        
-        isUsingEnhancedTracking = true
-    }
-    
-    var totalVolume: Double {
-        if isUsingEnhancedTracking {
-            return setData.totalVolume
-        } else {
-            return Double(sets) * Double(reps) * weight
-        }
-    }
-    
-    var completedSetsCount: Int {
-        if isUsingEnhancedTracking {
-            return setData.filter { $0.completed }.count
-        } else {
-            return sets // Assume all sets completed in legacy mode
-        }
-    }
 }
 
 private let dateFormatter: DateFormatter = {

@@ -35,134 +35,107 @@ struct SetRowView: View {
     
     // MARK: - Body
     var body: some View {
-        VStack(spacing: 8) {
-            // Main row content
-            HStack(spacing: 12) {
-                // Set number
-                Text("Set \(set.setNumber)")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                    .frame(width: 60, alignment: .leading)
+        HStack(spacing: 16) {
+            // Set number with clean circle background
+            ZStack {
+                Circle()
+                    .fill(set.completed ? Color.green.opacity(0.15) : Color.blue.opacity(0.1))
+                    .frame(width: 40, height: 40)
                 
-                // Target values
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Target")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    
-                    Text("\(String(format: "%.1f", set.targetWeight))kg × \(set.targetReps)")
-                        .font(.subheadline)
-                }
-                .frame(width: 100, alignment: .leading)
-                
-                Spacer()
-                
-                // Actual values (if completed)
-                if set.completed {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("Actual")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        
-                        Text("\(String(format: "%.1f", set.actualWeight))kg × \(set.actualReps)")
-                            .font(.subheadline)
-                            .foregroundColor(.green)
-                    }
-                    .frame(width: 100, alignment: .trailing)
-                } else if isEditing {
-                    // Edit mode
-                    HStack(spacing: 8) {
-                        TextField("kg", text: $weightInput)
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 60)
-                        
-                        TextField("reps", text: $repsInput)
-                            .keyboardType(.numberPad)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 50)
-                        
-                        Button(action: completeSet) {
-                            Text("✓")
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(8)
-                                .background(Color.green)
-                                .cornerRadius(8)
-                        }
-                    }
-                } else {
-                    // Start set button
-                    Button(action: { isEditing = true }) {
-                        Text(isActive ? "Start Set" : "Edit")
-                            .foregroundColor(.blue)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.blue, lineWidth: 1)
-                            )
-                    }
-                }
-                
-                // Completion status
-                Image(systemName: set.completed ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(set.completed ? .green : .gray)
-                    .font(.title2)
+                Text("\(set.setNumber)")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(set.completed ? .green : .blue)
             }
             
-            // Previous workout data (if available)
-            if let previous = previousSet {
-                HStack {
-                    Text("Previous:")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Text("\(String(format: "%.1f", previous.actualWeight))kg × \(previous.actualReps)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Spacer()
-                }
-                .padding(.leading, 60)
+            // Target values with cleaner layout
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Target")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Text("\(String(format: "%.1f", set.targetWeight))kg × \(set.targetReps)")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.primary)
             }
+            
+            Spacer()
+            
+            // Action area - cleaner design
+            if set.completed {
+                // Show completed status
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("Completed")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                    
+                    Text("\(String(format: "%.1f", set.actualWeight))kg × \(set.actualReps)")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.green)
+                }
+            } else {
+                // Start Set button with modern design
+                Button(action: { isEditing = true }) {
+                    Text("Start Set")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.blue)
+                        )
+                }
+            }
+            
+            // Completion status indicator
+            Image(systemName: set.completed ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(set.completed ? .green : .secondary)
+                .font(.system(size: 24))
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(backgroundColor)
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(isActive ? Color.blue : Color.clear, lineWidth: 2)
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(set.completed ? Color.green.opacity(0.3) : Color.blue.opacity(0.2), lineWidth: 1)
         )
+        .sheet(isPresented: $isEditing) {
+            SetEditSheet(
+                set: set,
+                onComplete: { weight, reps in
+                    onComplete(weight, reps)
+                    isEditing = false
+                }
+            )
+            .presentationDetents([.height(300)])
+        }
     }
     
     // MARK: - Helper Methods
     
-    /// Background color based on set status
-    private var backgroundColor: Color {
-        if set.completed {
-            return Color.green.opacity(0.1)
-        } else if isActive {
-            return Color.blue.opacity(0.1)
-        } else {
-            return Color(.systemBackground)
-        }
-    }
     
     /// Completes the set with the entered values
     private func completeSet() {
         guard let weight = Double(weightInput),
-              let reps = Int(repsInput) else {
-            // Handle invalid input
+              let reps = Int(repsInput),
+              weight > 0, reps > 0 else {
+            // Handle invalid input - reset to target values
+            resetToTargetValues()
             return
         }
         
         // Call the completion handler
         onComplete(weight, reps)
         isEditing = false
+    }
+    
+    /// Resets input fields to target values
+    private func resetToTargetValues() {
+        weightInput = String(format: "%.1f", set.targetWeight)
+        repsInput = "\(set.targetReps)"
     }
     
     /// Updates the target values for the set
@@ -175,6 +148,90 @@ struct SetRowView: View {
         
         // Call the update handler
         onUpdate(weight, reps)
+    }
+}
+
+// MARK: - Set Edit Sheet
+struct SetEditSheet: View {
+    let set: SetData
+    let onComplete: (Double, Int) -> Void
+    
+    @State private var weightInput: String = ""
+    @State private var repsInput: String = ""
+    @Environment(\.dismiss) private var dismiss
+    
+    init(set: SetData, onComplete: @escaping (Double, Int) -> Void) {
+        self.set = set
+        self.onComplete = onComplete
+        _weightInput = State(initialValue: String(format: "%.1f", set.targetWeight))
+        _repsInput = State(initialValue: "\(set.targetReps)")
+    }
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 24) {
+                Text("Set \(set.setNumber)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                VStack(spacing: 16) {
+                    HStack {
+                        Text("Weight (kg)")
+                            .font(.headline)
+                        Spacer()
+                        TextField("0.0", text: $weightInput)
+                            .keyboardType(.decimalPad)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .frame(width: 100)
+                    }
+                    
+                    HStack {
+                        Text("Reps")
+                            .font(.headline)
+                        Spacer()
+                        TextField("0", text: $repsInput)
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .frame(width: 100)
+                    }
+                }
+                .padding(.horizontal, 20)
+                
+                Button(action: completeSet) {
+                    Text("Complete Set")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal, 20)
+                
+                Spacer()
+            }
+            .padding(.top, 20)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func completeSet() {
+        guard let weight = Double(weightInput),
+              let reps = Int(repsInput),
+              weight > 0, reps > 0 else {
+            return
+        }
+        
+        onComplete(weight, reps)
+        dismiss()
     }
 }
 
@@ -199,12 +256,12 @@ struct SetRowView_Previews: PreviewProvider {
                     set.actualWeight = 100.0
                     return set
                 }(),
-                previousSet: SetData(setNumber: 2, targetReps: 8, targetWeight: 95.0),
                 onComplete: { _, _ in },
                 onUpdate: { _, _ in }
             )
         }
         .padding()
+        .background(Color(.systemGroupedBackground))
         .previewLayout(.sizeThatFits)
     }
 }

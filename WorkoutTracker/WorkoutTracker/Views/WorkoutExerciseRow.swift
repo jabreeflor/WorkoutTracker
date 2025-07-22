@@ -7,8 +7,8 @@ struct WorkoutExerciseRow: View {
     let onDelete: () -> Void
     let onRestTimerStart: (Int) -> Void
     
-    @State private var showingEnhancedView = false
     @State private var showingRestTimer = false
+    @State private var showingDeleteConfirmation = false
     
     init(
         exerciseData: Binding<WorkoutExerciseData>,
@@ -25,66 +25,120 @@ struct WorkoutExerciseRow: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Exercise Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(exerciseData.exercise.name ?? "Unknown Exercise")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                    
-                    Text("Primary: \(exerciseData.exercise.primaryMuscleGroup ?? "Unknown")")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                }
-                
-                Spacer()
-                
-                HStack(spacing: 12) {
-                    // Enhanced tracking toggle
-                    Button(action: {
-                        showingEnhancedView.toggle()
-                        if showingEnhancedView && exerciseData.setData.isEmpty {
-                            initializeSetData()
+        VStack(alignment: .leading, spacing: 16) {
+            // Exercise Header - Cleaner Design
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    // Exercise illustration and details
+                    HStack(spacing: 12) {
+                        // Exercise icon with category color
+                        ZStack {
+                            Circle()
+                                .fill(categoryColor.opacity(0.15))
+                                .frame(width: 44, height: 44)
+                            
+                            Image(systemName: exerciseIcon)
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(categoryColor)
                         }
-                    }) {
-                        Image(systemName: showingEnhancedView ? "list.bullet.circle.fill" : "list.bullet.circle")
-                            .font(.title3)
-                            .foregroundColor(.blue)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(exerciseData.exercise.name ?? "Unknown Exercise")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.primary)
+                            
+                            HStack(spacing: 6) {
+                                Text(exerciseData.exercise.primaryMuscleGroup ?? "Unknown")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(
+                                        Capsule()
+                                            .fill(categoryColor.opacity(0.15))
+                                    )
+                                    .foregroundColor(categoryColor)
+                                
+                                if let equipment = exerciseData.exercise.equipment {
+                                    Text(equipment)
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 3)
+                                        .background(
+                                            Capsule()
+                                                .fill(Color(.systemGray5))
+                                        )
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
                     }
                     
-                    Button(action: onDelete) {
-                        Image(systemName: "trash")
-                            .foregroundColor(.red)
+                    Spacer()
+                    
+                    // Options menu
+                    Menu {
+                        Button(role: .destructive, action: { showingDeleteConfirmation = true }) {
+                            Label("Remove Exercise", systemImage: "trash")
+                        }
+                    } label: {
+                        VStack(spacing: 2) {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 18, weight: .medium))
+                            Text("More")
+                                .font(.system(size: 10, weight: .semibold))
+                        }
+                        .foregroundColor(.secondary)
+                        .frame(width: 40, height: 36)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(.systemGray6))
+                        )
+                    }
+                    .confirmationDialog("Remove Exercise", isPresented: $showingDeleteConfirmation) {
+                        Button("Remove", role: .destructive) {
+                            withAnimation(.easeOut(duration: 0.3)) {
+                                onDelete()
+                            }
+                        }
+                        Button("Cancel", role: .cancel) { }
+                    } message: {
+                        Text("Remove \(exerciseData.exercise.name ?? "this exercise") from your workout?")
                     }
                 }
             }
             
-            // Enhanced Set Tracking View
-            if showingEnhancedView {
-                EnhancedSetTrackingView(
-                    exerciseData: $exerciseData,
-                    previousWorkoutData: previousWorkoutData,
-                    isWorkoutActive: isWorkoutActive,
-                    onRestTimerStart: onRestTimerStart
-                )
-            } else {
-                // Legacy Simple View
-                LegacySetTrackingView(exerciseData: $exerciseData)
-            }
+            // Enhanced Set Tracking View - Always shown
+            EnhancedSetTrackingView(
+                exerciseData: $exerciseData,
+                previousWorkoutData: previousWorkoutData,
+                isWorkoutActive: isWorkoutActive,
+                onRestTimerStart: onRestTimerStart
+            )
             
             // Progress Summary
-            if showingEnhancedView && !exerciseData.setData.isEmpty {
+            if !exerciseData.setData.isEmpty {
                 ProgressSummaryView(setData: exerciseData.setData)
             }
         }
-        .padding()
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.systemGray4).opacity(0.3), lineWidth: 1)
+        )
+        .shadow(
+            color: .black.opacity(0.04),
+            radius: 8,
+            x: 0,
+            y: 2
+        )
         .onAppear {
-            // Auto-enable enhanced tracking for new exercises during active workouts
-            if isWorkoutActive && exerciseData.setData.isEmpty {
-                showingEnhancedView = true
+            // Always ensure enhanced tracking is initialized
+            if exerciseData.setData.isEmpty {
                 initializeSetData()
             }
         }
@@ -115,6 +169,58 @@ struct WorkoutExerciseRow: View {
             exerciseData.isUsingEnhancedTracking = true
         }
     }
+    
+    // MARK: - Helper Properties
+    
+    private var categoryColor: Color {
+        guard let primary = exerciseData.exercise.primaryMuscleGroup else { return .blue }
+        
+        switch primary.lowercased() {
+        case let muscle where muscle.contains("chest"): return .red
+        case let muscle where muscle.contains("back"): return .blue
+        case let muscle where muscle.contains("shoulder"): return .orange
+        case let muscle where muscle.contains("bicep") || muscle.contains("tricep") || muscle.contains("arm"): return .purple
+        case let muscle where muscle.contains("quad") || muscle.contains("glute") || muscle.contains("hamstring") || muscle.contains("calve"): return .green
+        case let muscle where muscle.contains("core") || muscle.contains("oblique"): return .yellow
+        case let muscle where muscle.contains("cardio"): return .pink
+        case let muscle where muscle.contains("full body"): return .indigo
+        default: return .blue
+        }
+    }
+    
+    private var exerciseIcon: String {
+        guard let exerciseName = exerciseData.exercise.name?.lowercased() else { return "figure.strengthtraining.traditional" }
+        
+        switch exerciseName {
+        case let name where name.contains("push-up"): return "figure.core.training"
+        case let name where name.contains("pull-up"): return "figure.strengthtraining.functional"
+        case let name where name.contains("squat"): return "figure.squat"
+        case let name where name.contains("lunge"): return "figure.step.training"
+        case let name where name.contains("plank"): return "figure.core.training"
+        case let name where name.contains("deadlift"): return "figure.strengthtraining.traditional"
+        case let name where name.contains("bench press"): return "figure.strengthtraining.traditional"
+        case let name where name.contains("curl"): return "figure.strengthtraining.functional"
+        case let name where name.contains("press"): return "figure.arms.open"
+        case let name where name.contains("row"): return "figure.rower"
+        default: return exerciseIconByMuscleGroup
+        }
+    }
+    
+    private var exerciseIconByMuscleGroup: String {
+        guard let muscleGroup = exerciseData.exercise.primaryMuscleGroup?.lowercased() else { return "figure.strengthtraining.traditional" }
+        
+        switch muscleGroup {
+        case let muscle where muscle.contains("chest"): return "figure.strengthtraining.traditional"
+        case let muscle where muscle.contains("back"): return "figure.rower"
+        case let muscle where muscle.contains("shoulder"): return "figure.arms.open"
+        case let muscle where muscle.contains("bicep") || muscle.contains("tricep") || muscle.contains("arm"): return "figure.boxing"
+        case let muscle where muscle.contains("quad") || muscle.contains("glute") || muscle.contains("hamstring") || muscle.contains("calve"): return "figure.squat"
+        case let muscle where muscle.contains("core") || muscle.contains("oblique"): return "figure.core.training"
+        case let muscle where muscle.contains("cardio"): return "heart.fill"
+        case let muscle where muscle.contains("full body"): return "figure.mixed.cardio"
+        default: return "figure.strengthtraining.traditional"
+        }
+    }
 }
 
 struct EnhancedSetTrackingView: View {
@@ -127,53 +233,56 @@ struct EnhancedSetTrackingView: View {
         VStack(spacing: 8) {
             // Sets List
             ForEach(Array(exerciseData.setData.enumerated()), id: \.element.id) { index, setData in
-                SetRow(
-                    setData: Binding(
-                        get: { 
-                            guard index < exerciseData.setData.count else { 
-                                return SetData(setNumber: index + 1)
-                            }
-                            return exerciseData.setData[index] 
-                        },
-                        set: { newValue in
-                            guard index < exerciseData.setData.count else { return }
-                            exerciseData.setData[index] = newValue
-                        }
-                    ),
-                    setNumber: index + 1,
-                    previousSetData: getPreviousSetData(at: index),
-                    isWorkoutActive: isWorkoutActive,
-                    onSetCompleted: {
-                        updateExerciseProgress()
+                SetRowView(
+                    set: exerciseData.setData[index],
+                    previousSet: getPreviousSetData(at: index),
+                    isActive: isWorkoutActive,
+                    onComplete: { weight, reps in
+                        completeSet(at: index, weight: weight, reps: reps)
                     },
-                    onStartRestTimer: onRestTimerStart
+                    onUpdate: { weight, reps in
+                        updateSetTarget(at: index, weight: weight, reps: reps)
+                    }
                 )
             }
             
-            // Add/Remove Set Buttons
+            // Add/Remove Set Buttons - cleaner design
             HStack {
                 Button(action: addSet) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "plus.circle")
+                    HStack(spacing: 6) {
+                        Image(systemName: "plus.circle.fill")
                         Text("Add Set")
                     }
-                    .font(.caption)
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.blue)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.blue.opacity(0.1))
+                    )
                 }
                 
                 Spacer()
                 
                 if exerciseData.setData.count > 1 {
                     Button(action: removeLastSet) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "minus.circle")
+                        HStack(spacing: 6) {
+                            Image(systemName: "minus.circle.fill")
                             Text("Remove Set")
                         }
-                        .font(.caption)
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.red)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.red.opacity(0.1))
+                        )
                     }
                 }
             }
+            .padding(.top, 8)
         }
     }
     
@@ -216,50 +325,31 @@ struct EnhancedSetTrackingView: View {
         }
         return previousData[index]
     }
-}
-
-struct LegacySetTrackingView: View {
-    @Binding var exerciseData: WorkoutExerciseData
     
-    var body: some View {
-        HStack(spacing: 16) {
-            VStack(alignment: .leading) {
-                Text("Sets")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                Stepper(value: $exerciseData.sets, in: 1...20) {
-                    Text("\(exerciseData.sets)")
-                        .font(.headline)
-                }
-            }
-            
-            VStack(alignment: .leading) {
-                Text("Reps")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                Stepper(value: $exerciseData.reps, in: 1...100) {
-                    Text("\(exerciseData.reps)")
-                        .font(.headline)
-                }
-            }
-            
-            VStack(alignment: .leading) {
-                Text("Weight (lbs)")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                HStack {
-                    TextField("0", value: $exerciseData.weight, format: .number)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .keyboardType(.decimalPad)
-                        .frame(width: 80)
-                    Text("lbs")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
-            }
-        }
+    private func completeSet(at index: Int, weight: Double, reps: Int) {
+        guard index < exerciseData.setData.count else { return }
+        
+        exerciseData.setData[index].actualWeight = weight
+        exerciseData.setData[index].actualReps = reps
+        exerciseData.setData[index].completed = true
+        exerciseData.setData[index].timestamp = Date()
+        
+        updateExerciseProgress()
+        
+        // Start rest timer
+        onRestTimerStart(60) // Default 60 seconds
+    }
+    
+    private func updateSetTarget(at index: Int, weight: Double, reps: Int) {
+        guard index < exerciseData.setData.count else { return }
+        
+        exerciseData.setData[index].targetWeight = weight
+        exerciseData.setData[index].targetReps = reps
+        
+        updateLegacyFields()
     }
 }
+
 
 struct ProgressSummaryView: View {
     let setData: [SetData]
