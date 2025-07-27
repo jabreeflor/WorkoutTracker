@@ -26,13 +26,12 @@ struct WorkoutSessionView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
+            VStack(spacing: 0) {
                 // Header with workout name and timer
                 VStack(spacing: 8) {
                     TextField("Workout Name", text: $workoutName)
                         .font(.title2)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
                     
                     Text("Duration: \(formatTime(elapsedTime))")
                         .font(.headline)
@@ -43,6 +42,7 @@ struct WorkoutSessionView: View {
                         .foregroundColor(.gray)
                 }
                 .padding()
+                .frame(maxWidth: .infinity)
                 
                 // Add Exercise Button
                 Button(action: {
@@ -60,65 +60,82 @@ struct WorkoutSessionView: View {
                 }
                 .padding(.horizontal)
                 
-                // Rest Timer (if active)
-                if restTimerService.isActive {
-                    RestTimerView(
-                        timerService: restTimerService,
-                        onMinusPressed: {
-                            uncompleteLastCompletedSet()
-                        }
-                    )
-                }
-                
-                // Exercise List
-                if selectedExercises.isEmpty {
-                    VStack {
-                        Image(systemName: "dumbbell")
-                            .font(.system(size: 50))
-                            .foregroundColor(.gray)
-                        Text("No exercises added yet")
-                            .foregroundColor(.gray)
-                        Text("Tap 'Add Exercise' to get started!")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                    .padding()
-                    Spacer()
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 12) {
-                            ForEach(Array(selectedExercises.enumerated()), id: \.offset) { index, exerciseData in
-                                WorkoutExerciseRow(
-                                    exerciseData: Binding(
-                                        get: { 
-                                            guard index < selectedExercises.count else { 
-                                                return WorkoutExerciseData(exercise: exerciseData.exercise)
-                                            }
-                                            return selectedExercises[index] 
-                                        },
-                                        set: { newValue in
-                                            guard index < selectedExercises.count else { return }
-                                            print("DEBUG: Updating exercise at index \(index) - Sets: \(newValue.sets), Reps: \(newValue.reps), Weight: \(newValue.weight)")
-                                            selectedExercises[index] = newValue
-                                        }
-                                    ),
-                                    previousWorkoutData: getPreviousWorkoutData(for: exerciseData.exercise),
-                                    isWorkoutActive: true,
-                                    onDelete: {
-                                        if index < selectedExercises.count {
-                                            selectedExercises.remove(at: index)
-                                        }
-                                    },
-                                    onRestTimerStart: { duration in
-                                        restTimerService.start(duration: TimeInterval(duration))
-                                    }
-                                )
-                                .id("exercise-\(index)-\(exerciseData.exercise.objectID)")
+                // Enhanced Rest Timer (if active) - with smooth sliding animation
+                VStack(spacing: 0) {
+                    if restTimerService.isActive {
+                        RestTimerView(
+                            timerService: restTimerService,
+                            onMinusPressed: {
+                                uncompleteLastCompletedSet()
+                                // Don't stop the timer, just provide feedback
+                                let impact = UIImpactFeedbackGenerator(style: .medium)
+                                impact.impactOccurred()
                             }
-                        }
+                        )
                         .padding(.horizontal)
+                        .padding(.top, 8)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .top).combined(with: .opacity).combined(with: .scale(scale: 0.9)),
+                            removal: .move(edge: .top).combined(with: .opacity).combined(with: .scale(scale: 0.9))
+                        ))
                     }
                 }
+                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: restTimerService.isActive)
+                
+                // Exercise List - with animated layout
+                VStack(spacing: 0) {
+                    if selectedExercises.isEmpty {
+                        VStack {
+                            Image(systemName: "dumbbell")
+                                .font(.system(size: 50))
+                                .foregroundColor(.gray)
+                            Text("No exercises added yet")
+                                .foregroundColor(.gray)
+                            Text("Tap 'Add Exercise' to get started!")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        ScrollView {
+                            LazyVStack(spacing: 8) {
+                                ForEach(Array(selectedExercises.enumerated()), id: \.offset) { index, exerciseData in
+                                    WorkoutExerciseRow(
+                                        exerciseData: Binding(
+                                            get: { 
+                                                guard index < selectedExercises.count else { 
+                                                    return WorkoutExerciseData(exercise: exerciseData.exercise)
+                                                }
+                                                return selectedExercises[index] 
+                                            },
+                                            set: { newValue in
+                                                guard index < selectedExercises.count else { return }
+                                                print("DEBUG: Updating exercise at index \(index) - Sets: \(newValue.sets), Reps: \(newValue.reps), Weight: \(newValue.weight)")
+                                                selectedExercises[index] = newValue
+                                            }
+                                        ),
+                                        previousWorkoutData: getPreviousWorkoutData(for: exerciseData.exercise),
+                                        isWorkoutActive: true,
+                                        onDelete: {
+                                            if index < selectedExercises.count {
+                                                selectedExercises.remove(at: index)
+                                            }
+                                        },
+                                        onRestTimerStart: { duration in
+                                            restTimerService.start(duration: TimeInterval(duration))
+                                        }
+                                    )
+                                    .id("exercise-\(index)-\(exerciseData.exercise.objectID)")
+                                }
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.top, 8)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: restTimerService.isActive)
                 
                 // Bottom buttons
                 HStack(spacing: 16) {
@@ -143,6 +160,7 @@ struct WorkoutSessionView: View {
                 }
                 .padding()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle("Active Workout")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingExerciseSelection) {
@@ -157,6 +175,7 @@ struct WorkoutSessionView: View {
                 timer?.invalidate()
             }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
     
     private func startTimer() {
@@ -225,6 +244,14 @@ struct WorkoutSessionView: View {
             workoutExercise.id = UUID()
             workoutExercise.exercise = exerciseData.exercise
             workoutExercise.workoutSession = workout
+            
+            // Set rest time based on exercise settings
+            if let restTime = exerciseData.restTime {
+                workoutExercise.exerciseRestTime = Int32(restTime)
+            } else {
+                // Update rest time from exercise defaults
+                workoutExercise.updateRestTimeFromExerciseDefaults()
+            }
             
             // Use enhanced tracking if available, otherwise fallback to legacy
             if exerciseData.isUsingEnhancedTracking && !exerciseData.setData.isEmpty {

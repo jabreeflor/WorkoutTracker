@@ -41,8 +41,9 @@ class CoreMLModelManager {
         do {
             let trainingData = try MLDataTable(dictionary: prepareTrainingData(data))
             
-            let regressor = try MLRegressor(trainingData: trainingData, 
-                                         targetColumn: "success_probability")
+            // Use MLLinearRegressor or MLBoostedTreeRegressor instead of deprecated MLRegressor
+            let regressor = try MLLinearRegressor(trainingData: trainingData, 
+                                               targetColumn: "success_probability")
             
             let modelURL = getModelURL()
             try regressor.write(to: modelURL)
@@ -107,23 +108,25 @@ class CoreMLModelManager {
     
     // MARK: - Data Preparation
     
-    private func prepareTrainingData(_ data: [WorkoutModelData]) -> [String: Any] {
-        #if canImport(CreateML) && !targetEnvironment(simulator)
+    #if canImport(CreateML) && !targetEnvironment(simulator)
+    private func prepareTrainingData(_ data: [WorkoutModelData]) -> [String: any MLDataValueConvertible] {
         return [
-            "target_weight": MLDataValue.doubleArray(data.map { $0.targetWeight }),
-            "target_reps": MLDataValue.doubleArray(data.map { Double($0.targetReps) }),
-            "recent_average_volume": MLDataValue.doubleArray(data.map { $0.recentAverageVolume }),
-            "recent_average_weight": MLDataValue.doubleArray(data.map { $0.recentAverageWeight }),
-            "recent_completion_rate": MLDataValue.doubleArray(data.map { $0.recentCompletionRate }),
-            "trend_multiplier": MLDataValue.doubleArray(data.map { $0.trendMultiplier }),
-            "days_since_last_workout": MLDataValue.doubleArray(data.map { Double($0.daysSinceLastWorkout) }),
-            "workout_count": MLDataValue.doubleArray(data.map { Double($0.workoutCount) }),
-            "success_probability": MLDataValue.doubleArray(data.map { $0.actualSuccessProbability })
+            "target_weight": data.map { $0.targetWeight },
+            "target_reps": data.map { Double($0.targetReps) },
+            "recent_average_volume": data.map { $0.recentAverageVolume },
+            "recent_average_weight": data.map { $0.recentAverageWeight },
+            "recent_completion_rate": data.map { $0.recentCompletionRate },
+            "trend_multiplier": data.map { $0.trendMultiplier },
+            "days_since_last_workout": data.map { Double($0.daysSinceLastWorkout) },
+            "workout_count": data.map { Double($0.workoutCount) },
+            "success_probability": data.map { $0.actualSuccessProbability }
         ]
-        #else
-        return [:]
-        #endif
     }
+    #else
+    private func prepareTrainingData(_ data: [WorkoutModelData]) -> [String: Any] {
+        return [:]
+    }
+    #endif
     
     private func getModelURL() -> URL {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, 

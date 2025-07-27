@@ -48,6 +48,8 @@ struct SetData: Codable, Identifiable, Equatable {
     }
 }
 
+
+
 extension SetData {
     static let sample = SetData(
         setNumber: 1,
@@ -121,4 +123,6 @@ extension Array where Element == SetData {
         guard !completed.isEmpty else { return 0.0 }
         return completed.reduce(0) { $0 + $1.actualWeight } / Double(completed.count)
     }
+    
+
 }

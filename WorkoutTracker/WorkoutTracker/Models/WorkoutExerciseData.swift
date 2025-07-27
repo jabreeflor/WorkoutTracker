@@ -5,6 +5,7 @@ public struct WorkoutExerciseData: Equatable {
     var sets: Int = 1
     var reps: Int = 10
     var weight: Double = 0.0
+    var restTime: Int? = nil
     var setData: [SetData] = []
     var isUsingEnhancedTracking: Bool = false
     
@@ -15,6 +16,9 @@ public struct WorkoutExerciseData: Equatable {
         self.weight = 0.0
         self.setData = []
         self.isUsingEnhancedTracking = false
+        
+        // Rest time will be set separately using the MainActor method
+        self.restTime = nil
     }
     
     public mutating func enableEnhancedTracking() {
@@ -36,6 +40,14 @@ public struct WorkoutExerciseData: Equatable {
         isUsingEnhancedTracking = true
     }
     
+    /// Sets the rest time from exercise defaults (must be called on MainActor)
+    @MainActor
+    public mutating func setRestTimeFromDefaults() {
+        if let exerciseRestTime = RestTimeResolver.shared.getExerciseRestTime(for: exercise) {
+            self.restTime = exerciseRestTime
+        }
+    }
+
     var totalVolume: Double {
         if isUsingEnhancedTracking {
             return setData.totalVolume

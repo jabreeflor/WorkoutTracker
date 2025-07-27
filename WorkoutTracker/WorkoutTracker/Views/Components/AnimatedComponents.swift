@@ -56,11 +56,11 @@ struct AnimatedProgressRing: View {
 struct BouncyButton<Content: View>: View {
     let action: () -> Void
     let content: Content
-    let hapticType: HapticContext?
+    let hapticType: HapticService.FeedbackType?
     
     @State private var isPressed = false
     
-    init(action: @escaping () -> Void, hapticType: HapticContext? = nil, @ViewBuilder content: () -> Content) {
+    init(action: @escaping () -> Void, hapticType: HapticService.FeedbackType? = nil, @ViewBuilder content: () -> Content) {
         self.action = action
         self.content = content()
         self.hapticType = hapticType

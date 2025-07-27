@@ -114,8 +114,8 @@ struct WorkoutView: View {
                         .padding(.horizontal)
                     }
                     
-                    // Templates Section
-                    VStack(alignment: .leading, spacing: 12) {
+                    // Templates Section - Centered
+                    VStack(spacing: 12) {
                         HStack {
                             Text("Templates")
                                 .font(.headline)
@@ -135,6 +135,7 @@ struct WorkoutView: View {
                                 .foregroundColor(.blue)
                             }
                         }
+                        .padding(.horizontal)
                         
                         if currentTemplates.isEmpty {
                             VStack(spacing: 12) {
@@ -164,6 +165,7 @@ struct WorkoutView: View {
                                         .multilineTextAlignment(.center)
                                 }
                             }
+                            .frame(maxWidth: .infinity)
                             .padding()
                         } else {
                             LazyVGrid(columns: [
@@ -176,9 +178,9 @@ struct WorkoutView: View {
                                     }
                                 }
                             }
+                            .padding(.horizontal)
                         }
                     }
-                    .padding(.horizontal)
                     
                     Spacer(minLength: 20)
                 }

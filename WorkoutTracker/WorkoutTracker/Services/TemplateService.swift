@@ -52,6 +52,8 @@ class TemplateService: ObservableObject {
                 workoutExercise.sets = templateExercise.defaultSets
                 workoutExercise.reps = templateExercise.defaultReps
                 workoutExercise.weight = templateExercise.defaultWeight
+                
+                // Rest time will be set from defaults automatically
             }
         }
         

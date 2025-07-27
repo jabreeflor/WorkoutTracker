@@ -120,4 +120,18 @@ extension WorkoutExercise {
     var hasIncompleteSets: Bool {
         return setData.contains { !$0.isCompleted }
     }
+    
+    /// Updates the exercise rest time from the exercise's default settings
+    @MainActor
+    func updateRestTimeFromExerciseDefaults() {
+        guard let exercise = self.exercise else { return }
+        
+        // Check if the exercise has a specific rest time set
+        if let exerciseRestTime = RestTimeResolver.shared.getExerciseRestTime(for: exercise) {
+            self.exerciseRestTime = Int32(exerciseRestTime)
+        } else {
+            // Use global default
+            self.exerciseRestTime = Int32(RestTimeResolver.shared.getGlobalDefaultRestTime())
+        }
+    }
 }

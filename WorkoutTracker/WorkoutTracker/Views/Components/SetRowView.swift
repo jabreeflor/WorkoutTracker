@@ -19,6 +19,7 @@ struct SetRowView: View {
     @State private var completionGlow: Bool = false
     @FocusState private var weightFieldFocused: Bool
     @FocusState private var repsFieldFocused: Bool
+    @AppStorage("weightUnit") private var weightUnit: String = "lbs"
     
     // MARK: - Initialization
     init(
@@ -240,7 +241,7 @@ struct SetRowView: View {
     
     private var weightInputSection: some View {
         VStack(spacing: 4) {
-            Text("kg")
+            Text(weightUnit)
                 .font(.caption2)
                 .foregroundColor(set.completed ? .green : .secondary)
             
@@ -292,46 +293,29 @@ struct SetRowView: View {
                         )
                 }
             } else {
-                // Editable weight input
-                HStack(spacing: 4) {
-                    // Decrease button
-                    Button(action: { adjustWeight(-2.5) }) {
-                        Image(systemName: "minus.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
+                // Editable weight input - Clean text input without +/- buttons
+                TextField("0.0", text: $weightInput)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.center)
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 70, height: 36)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemBackground))
+                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                    )
+                    .focused($weightFieldFocused)
+                    .onSubmit {
+                        updateWeightFromInput()
+                        isEditingWeight = false
                     }
-                    .disabled(!isActive)
-                    
-                    // Weight field
-                    TextField("0", text: $weightInput)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.center)
-                        .font(.system(size: 16, weight: .semibold))
-                        .frame(width: 50, height: 36)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color(.systemBackground))
-                        )
-                        .focused($weightFieldFocused)
-                        .onSubmit {
+                    .onChange(of: weightFieldFocused) { _, focused in
+                        if !focused {
                             updateWeightFromInput()
                             isEditingWeight = false
                         }
-                        .onChange(of: weightFieldFocused) { _, focused in
-                            if !focused {
-                                updateWeightFromInput()
-                                isEditingWeight = false
-                            }
-                        }
-                    
-                    // Increase button
-                    Button(action: { adjustWeight(2.5) }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
                     }
                     .disabled(!isActive)
-                }
             }
         }
     }
@@ -390,46 +374,29 @@ struct SetRowView: View {
                         )
                 }
             } else {
-                // Editable reps input
-                HStack(spacing: 4) {
-                    // Decrease button
-                    Button(action: { adjustReps(-1) }) {
-                        Image(systemName: "minus.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
+                // Editable reps input - Clean text input without +/- buttons
+                TextField("0", text: $repsInput)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.center)
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 70, height: 36)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemBackground))
+                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                    )
+                    .focused($repsFieldFocused)
+                    .onSubmit {
+                        updateRepsFromInput()
+                        isEditingReps = false
                     }
-                    .disabled(!isActive)
-                    
-                    // Reps field
-                    TextField("0", text: $repsInput)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.center)
-                        .font(.system(size: 16, weight: .semibold))
-                        .frame(width: 50, height: 36)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color(.systemBackground))
-                        )
-                        .focused($repsFieldFocused)
-                        .onSubmit {
+                    .onChange(of: repsFieldFocused) { _, focused in
+                        if !focused {
                             updateRepsFromInput()
                             isEditingReps = false
                         }
-                        .onChange(of: repsFieldFocused) { _, focused in
-                            if !focused {
-                                updateRepsFromInput()
-                                isEditingReps = false
-                            }
-                        }
-                    
-                    // Increase button
-                    Button(action: { adjustReps(1) }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
                     }
                     .disabled(!isActive)
-                }
             }
         }
     }

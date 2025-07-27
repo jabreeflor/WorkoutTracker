@@ -27,6 +27,19 @@ struct SettingsView: View {
             Form {
                 // Workout Settings
                 Section(header: Text("Workout Settings")) {
+                    NavigationLink(destination: RestTimeSettingsView()) {
+                        HStack {
+                            Image(systemName: "timer.circle.fill")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            
+                            Text("Rest Time Settings")
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                        }
+                    }
+                    
                     HStack {
                         Image(systemName: "timer")
                             .foregroundColor(.blue)
@@ -338,7 +351,7 @@ struct SettingsView: View {
         defaults.removeObject(forKey: "reminderInterval")
         
         try? viewContext.save()
-        HapticService.shared.success()
+        HapticService.shared.provideFeedback(for: .success)
         
         dismiss()
     }

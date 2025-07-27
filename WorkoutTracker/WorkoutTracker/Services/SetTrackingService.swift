@@ -13,7 +13,7 @@ class SetTrackingService: ObservableObject {
     @Published var progressionSuggestion: ProgressionSuggestion? = nil
     
     // MARK: - Services
-    let restTimerService = RestTimerService()
+    let restTimerService = RestTimerService.shared
     
     // MARK: - Private Properties
     private let coreDataManager = CoreDataManager.shared
@@ -101,6 +101,8 @@ class SetTrackingService: ObservableObject {
         saveChanges()
     }
     
+
+    
     /// Updates the target values for a set at the specified index
     /// - Parameters:
     ///   - index: The index of the set to update
@@ -133,6 +135,34 @@ class SetTrackingService: ObservableObject {
         var set = activeSets[index]
         set.actualWeight = weight
         set.actualReps = reps
+        set.completed = true
+        set.timestamp = Date()
+        activeSets[index] = set
+        
+        // Save changes
+        exercise.setData = activeSets
+        saveChanges()
+        
+        // Auto-advance to next set if available
+        if index == currentSetIndex && index < activeSets.count - 1 {
+            currentSetIndex = index + 1
+        }
+        
+        // Start rest timer if not the last set
+        if index < activeSets.count - 1 {
+            startRestTimer()
+        }
+    }
+    
+    /// Completes a set at the specified index using the current set data values
+    /// - Parameter index: The index of the set to complete
+    func completeSet(at index: Int) {
+        guard let exercise = currentExercise, index < activeSets.count else { return }
+        
+        // Get current set data
+        var set = activeSets[index]
+        
+        // Mark as completed with current values
         set.completed = true
         set.timestamp = Date()
         activeSets[index] = set
@@ -206,6 +236,25 @@ class SetTrackingService: ObservableObject {
         progressionSuggestion = nil
     }
     
+    /// Updates a set at the specified index with a new SetData
+    /// - Parameters:
+    ///   - index: The index of the set to update
+    ///   - newSetData: The new SetData to replace it with
+    func updateSet(at index: Int, with newSetData: SetData) {
+        guard index < activeSets.count else { return }
+        
+        // Update the set in memory
+        activeSets[index] = newSetData
+        
+        // Update the exercise in Core Data
+        if let exercise = currentExercise {
+            exercise.setData = activeSets
+        }
+        
+        // Automatically save changes
+        saveChanges()
+    }
+    
     // MARK: - Private Methods
     
     /// Loads data from the previous workout for the same exercise
@@ -257,7 +306,7 @@ class SetTrackingService: ObservableObject {
     
     /// Generates a progression suggestion based on previous workout data
     private func generateProgressionSuggestion() async {
-        guard let _ = currentExercise,
+        guard currentExercise != nil,
               let previousSets = previousWorkoutSets,
               !previousSets.isEmpty else {
             progressionSuggestion = nil
@@ -265,7 +314,7 @@ class SetTrackingService: ObservableObject {
         }
         
         // Get the current and previous workout data
-        let _ = activeSets
+        _ = activeSets
         
         // Calculate completion rate for previous workout
         let previousCompletionRate = previousSets.completionRate
@@ -337,13 +386,42 @@ class SetTrackingService: ObservableObject {
     
     /// Starts the rest timer
     private func startRestTimer() {
-        guard let exercise = currentExercise else { return }
+        guard let exercise = currentExercise, currentSetIndex < activeSets.count else { return }
         
-        // Get rest time from exercise or use default
-        let restTime = exercise.exerciseRestTime > 0 ? Int(exercise.exerciseRestTime) : 60
+        // Get the current set
+        let currentSet = activeSets[currentSetIndex]
         
-        // Start the timer
-        restTimerService.start(duration: TimeInterval(restTime))
+        // Use RestTimeResolver to determine the appropriate rest time
+        let restTime = RestTimeResolver.shared.resolveRestTime(
+            for: currentSet,
+            exercise: exercise.exercise
+        )
+        
+        // Get the source of the rest time
+        let source = RestTimeResolver.shared.getRestTimeSource(
+            for: currentSet,
+            exercise: exercise.exercise
+        )
+        
+        // Start the timer with improved functionality
+        restTimerService.start(duration: TimeInterval(restTime), source: source, forceRestart: true)
+        
+        // Provide haptic feedback when rest timer starts
+        HapticService.shared.provideFeedback(for: .success)
+        
+        // Log rest time usage for analytics
+        logRestTimeUsage(
+            exerciseId: exercise.exercise?.id?.uuidString ?? "unknown", 
+            restTime: restTime,
+            source: source
+        )
+    }
+    
+    /// Logs rest time usage for analytics
+    private func logRestTimeUsage(exerciseId: String, restTime: Int, source: RestTimeSource) {
+        // In a real implementation, this would log to an analytics service
+        // For now, we'll just print to the console
+        print("Rest time used: \(restTime)s, Source: \(source.description), Exercise: \(exerciseId)")
     }
     
     /// Saves changes to Core Data

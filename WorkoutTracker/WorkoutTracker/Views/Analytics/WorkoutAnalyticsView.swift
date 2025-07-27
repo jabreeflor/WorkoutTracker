@@ -302,7 +302,7 @@ struct LegacyChartBar: View {
 struct MuscleGroupDistribution: View {
     let workouts: [WorkoutSession]
     
-    private var muscleGroupData: [MuscleGroupData] {
+    private var muscleGroupData: [AnalyticsMuscleGroupData] {
         var counts: [String: Int] = [:]
         
         for workout in workouts {
@@ -314,7 +314,7 @@ struct MuscleGroupDistribution: View {
             }
         }
         
-        return counts.map { MuscleGroupData(name: $0.key, count: $0.value) }
+        return counts.map { AnalyticsMuscleGroupData(name: $0.key, count: $0.value) }
             .sorted { $0.count > $1.count }
     }
     
@@ -336,7 +336,7 @@ struct MuscleGroupDistribution: View {
 }
 
 struct MuscleGroupRow: View {
-    let data: MuscleGroupData
+    let data: AnalyticsMuscleGroupData
     let total: Int
     
     private var percentage: Double {
@@ -481,7 +481,7 @@ struct ChartDataPoint: Identifiable {
     let workoutIndex: Int
 }
 
-struct MuscleGroupData {
+struct AnalyticsMuscleGroupData {
     let name: String
     let count: Int
 }

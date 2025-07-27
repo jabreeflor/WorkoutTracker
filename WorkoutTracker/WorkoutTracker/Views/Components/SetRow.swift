@@ -13,6 +13,7 @@ struct SetRow: View {
     @State private var isEditing: Bool = false
     @State private var showingRPEPicker: Bool = false
     @State private var selectedRPE: Int = 7
+    @AppStorage("weightUnit") private var weightUnit: String = "lbs"
     
     var body: some View {
         VStack(spacing: 8) {
@@ -29,7 +30,7 @@ struct SetRow: View {
                     Text("Target")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-                    Text("\(String(format: "%.1f", setData.targetWeight))kg × \(setData.targetReps)")
+                    Text("\(String(format: "%.1f", setData.targetWeight))\(weightUnit) × \(setData.targetReps)")
                         .font(.subheadline)
                         .fontWeight(.medium)
                 }
@@ -44,7 +45,7 @@ struct SetRow: View {
                         Text("Actual")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                        Text("\(String(format: "%.1f", setData.actualWeight))kg × \(setData.actualReps)")
+                        Text("\(String(format: "%.1f", setData.actualWeight))\(weightUnit) × \(setData.actualReps)")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(.green)

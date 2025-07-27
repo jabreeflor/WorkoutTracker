@@ -121,7 +121,8 @@ struct WorkoutExerciseRow: View {
                 ProgressSummaryView(setData: exerciseData.setData)
             }
         }
-        .padding(20)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 16)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.systemBackground))
@@ -234,19 +235,40 @@ struct EnhancedSetTrackingView: View {
     let isWorkoutActive: Bool
     let onRestTimerStart: (Int) -> Void
     
+    @StateObject private var restTimeResolver = RestTimeResolver.shared
+    
     var body: some View {
         VStack(spacing: 8) {
             // Sets List
             ForEach(Array(exerciseData.setData.enumerated()), id: \.element.id) { index, setData in
-                SetRowView(
-                    set: exerciseData.setData[index],
-                    previousSet: getPreviousSetData(at: index),
+                EnhancedSetRowView(
+                    setData: Binding(
+                        get: { exerciseData.setData[index] },
+                        set: { newValue in
+                            if index < exerciseData.setData.count {
+                                exerciseData.setData[index] = newValue
+                            }
+                        }
+                    ),
+                    previousSetData: getPreviousSetData(at: index),
                     isActive: isWorkoutActive,
-                    onComplete: { weight, reps in
-                        completeSet(at: index, weight: weight, reps: reps)
+                    onSetCompleted: {
+                        updateExerciseProgress()
+                        // Use RestTimeResolver to determine appropriate rest time
+                        let restTime = restTimeResolver.resolveRestTime(
+                            for: exerciseData.setData[index], 
+                            exercise: exerciseData.exercise
+                        )
+                        onRestTimerStart(restTime)
                     },
-                    onUpdate: { weight, reps in
-                        updateSetTarget(at: index, weight: weight, reps: reps)
+                    onStartRestTimer: { duration in
+                        onRestTimerStart(duration)
+                    },
+                    onValueChange: { updatedSet in
+                        if index < exerciseData.setData.count {
+                            exerciseData.setData[index] = updatedSet
+                            updateLegacyFields()
+                        }
                     }
                 )
             }

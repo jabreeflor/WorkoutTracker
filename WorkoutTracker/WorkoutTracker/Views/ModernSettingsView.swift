@@ -27,7 +27,6 @@ struct ModernSettingsView: View {
     @State private var showingDataManagement = false
     @State private var showingAbout = false
     @State private var showingResetAlert = false
-    @State private var showingIconGenerator = false
     @State private var showingSubscriptionInfo = false
     @State private var showingCloudSync = false
     @State private var isLoading = false
@@ -87,9 +86,6 @@ struct ModernSettingsView: View {
             }
             .sheet(isPresented: $showingSubscriptionInfo) {
                 SubscriptionInfoView()
-            }
-            .sheet(isPresented: $showingIconGenerator) {
-                IconGeneratorView()
             }
             .sheet(isPresented: $showingCloudSync) {
                 CloudSyncView()
@@ -160,7 +156,7 @@ struct ModernSettingsView: View {
                     Stepper("", value: $defaultRestTime, in: 30...600, step: 15)
                         .labelsHidden()
                         .onChange(of: defaultRestTime) { _, _ in
-                            HapticService.shared.valueChanged()
+                            HapticService.shared.provideFeedback(for: .selection)
                         }
                 }
                 
@@ -186,7 +182,7 @@ struct ModernSettingsView: View {
                     .pickerStyle(SegmentedPickerStyle())
                     .frame(width: 120)
                     .onChange(of: weightUnit) { _, _ in
-                        HapticService.shared.valueChanged()
+                        HapticService.shared.provideFeedback(for: .selection)
                     }
                 }
                 
@@ -434,15 +430,6 @@ struct ModernSettingsView: View {
         SettingsSection(title: "Developer Tools", icon: "hammer.fill", color: .purple) {
             VStack(spacing: 16) {
                 SettingsButton(
-                    icon: "app.badge.fill",
-                    title: "Generate App Icons",
-                    subtitle: "Create app icons for different sizes",
-                    color: .purple
-                ) {
-                    showingIconGenerator = true
-                }
-                
-                SettingsButton(
                     icon: "doc.text.fill",
                     title: "Seed Test Data",
                     subtitle: "Add sample workouts for testing",
@@ -515,7 +502,7 @@ struct ModernSettingsView: View {
             
             DispatchQueue.main.async {
                 isLoading = false
-                HapticService.shared.success()
+                HapticService.shared.provideFeedback(for: .success)
                 dismiss()
             }
         }
@@ -537,7 +524,7 @@ struct ModernSettingsView: View {
     private func seedTestData() {
         // Add sample data for testing
         DataSeedingService.shared.checkAndSeedDatabase()
-        HapticService.shared.success()
+        HapticService.shared.provideFeedback(for: .success)
     }
     #endif
 }
@@ -667,7 +654,7 @@ struct SettingsToggle: View {
                 .labelsHidden()
                 .disabled(isPremium) // Disable if premium feature
                 .onChange(of: isOn) { _, _ in
-                    HapticService.shared.valueChanged()
+                    HapticService.shared.provideFeedback(for: .selection)
                 }
         }
     }

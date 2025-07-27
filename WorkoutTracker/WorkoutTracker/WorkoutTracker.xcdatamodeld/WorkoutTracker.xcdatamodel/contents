@@ -7,8 +7,10 @@
         <attribute name="secondaryMuscleGroup" optional="YES" attributeType="String"/>
         <attribute name="equipment" optional="YES" attributeType="String"/>
         <attribute name="difficulty" optional="YES" attributeType="String"/>
+        <attribute name="defaultRestTime" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="workoutExercises" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="WorkoutExercise" inverseName="exercise" inverseEntity="WorkoutExercise"/>
         <relationship name="templateExercises" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="TemplateExercise" inverseName="exercise" inverseEntity="TemplateExercise"/>
+        <relationship name="muscleGroups" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MuscleGroup" inverseName="exercises" inverseEntity="MuscleGroup"/>
     </entity>
     <entity name="UserProfile" representedClassName="UserProfile" syncable="YES" codeGenerationType="class">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
@@ -74,9 +76,16 @@
         <attribute name="duration" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="exercises" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="WorkoutExercise" inverseName="workoutSession" inverseEntity="WorkoutExercise"/>
     </entity>
+    <entity name="MuscleGroup" representedClassName="MuscleGroup" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="category" optional="YES" attributeType="String"/>
+        <relationship name="exercises" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Exercise" inverseName="muscleGroups" inverseEntity="Exercise"/>
+    </entity>
     <elements>
-        <element name="Exercise" positionX="-63" positionY="-18" width="128" height="148"/>
+        <element name="Exercise" positionX="-63" positionY="-18" width="128" height="168"/>
         <element name="Folder" positionX="-27" positionY="135" width="128" height="119"/>
+        <element name="MuscleGroup" positionX="-45" positionY="72" width="128" height="89"/>
         <element name="TemplateExercise" positionX="-18" positionY="144" width="128" height="149"/>
         <element name="UserProfile" positionX="-54" positionY="99" width="128" height="179"/>
         <element name="WorkoutExercise" positionX="-36" positionY="54" width="128" height="179"/>

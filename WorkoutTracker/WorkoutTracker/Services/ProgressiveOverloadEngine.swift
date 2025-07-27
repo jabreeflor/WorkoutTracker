@@ -127,7 +127,7 @@ class ProgressiveOverloadEngine {
         setPosition: SetPosition
     ) -> Progression {
         let completionRate = Double(lastSet.actualReps) / Double(lastSet.targetReps)
-        let muscleGroup = MuscleGroup.from(exercise.primaryMuscleGroup)
+        let muscleGroup = ExerciseMuscleGroupClassification.from(exercise.primaryMuscleGroup)
         
         // If user exceeded target reps significantly, increase weight
         if completionRate >= 1.2 && lastSet.actualReps >= lastSet.targetReps + 2 {
@@ -168,7 +168,7 @@ class ProgressiveOverloadEngine {
         return Progression(type: .maintain, weightIncrease: 0, repIncrease: 0)
     }
     
-    private func getWeightIncrement(for muscleGroup: MuscleGroup, preferences: ProgressionPreferences) -> Double {
+    private func getWeightIncrement(for muscleGroup: ExerciseMuscleGroupClassification, preferences: ProgressionPreferences) -> Double {
         switch muscleGroup {
         case .chest, .back, .legs:
             return preferences.largeIncrement
@@ -298,10 +298,10 @@ enum ProgressionType {
     case deload
 }
 
-enum MuscleGroup {
+enum ExerciseMuscleGroupClassification {
     case chest, back, legs, shoulders, arms, core
     
-    static func from(_ string: String?) -> MuscleGroup {
+    static func from(_ string: String?) -> ExerciseMuscleGroupClassification {
         guard let string = string?.lowercased() else { return .chest }
         
         switch string {

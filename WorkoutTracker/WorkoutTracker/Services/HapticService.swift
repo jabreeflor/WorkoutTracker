@@ -1,61 +1,64 @@
-import Foundation
 import UIKit
-
-/// Haptic feedback context for different UI interactions
-enum HapticContext {
-    case button
-    case success
-    case error
-    case warning
-    case selection
-    case impact(UIImpactFeedbackGenerator.FeedbackStyle)
-    case setCompletion(isCompleted: Bool)
-    case timerAction(TimerAction)
-    
-    enum TimerAction {
-        case start
-        case pause
-        case resume
-        case complete
-    }
-}
+import SwiftUI
 
 /// Service for providing haptic feedback throughout the app
-class HapticService {
+class HapticService: ObservableObject {
     static let shared = HapticService()
     
     private init() {}
     
-    /// Provides appropriate haptic feedback based on the context
-    func provideFeedback(for context: HapticContext) {
-        switch context {
+    // MARK: - Configuration
+    @Published var isEnabled: Bool = true
+    
+    enum FeedbackType {
+        case button
+        case impact(UIImpactFeedbackGenerator.FeedbackStyle)
+        case notification(UINotificationFeedbackGenerator.FeedbackType)
+        case success
+        case warning
+        case error
+        case selection
+        case timerAction(TimerAction)
+        
+        enum TimerAction {
+            case start
+            case pause
+            case resume
+            case complete
+            case extend
+            case reduce
+        }
+    }
+    
+    func provideFeedback(for type: FeedbackType) {
+        switch type {
         case .button:
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
-            
-        case .success:
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
-            
-        case .error:
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.error)
-            
-        case .warning:
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.warning)
-            
-        case .selection:
-            let generator = UISelectionFeedbackGenerator()
-            generator.selectionChanged()
             
         case .impact(let style):
             let generator = UIImpactFeedbackGenerator(style: style)
             generator.impactOccurred()
             
-        case .setCompletion(let isCompleted):
+        case .notification(let type):
             let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(isCompleted ? .success : .warning)
+            generator.notificationOccurred(type)
+            
+        case .success:
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+            
+        case .warning:
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.warning)
+            
+        case .error:
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.error)
+            
+        case .selection:
+            let generator = UISelectionFeedbackGenerator()
+            generator.selectionChanged()
             
         case .timerAction(let action):
             switch action {
@@ -68,34 +71,54 @@ class HapticService {
             case .complete:
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
+            case .extend, .reduce:
+                let generator = UIImpactFeedbackGenerator(style: .light)
+                generator.impactOccurred()
             }
         }
     }
     
-    // MARK: - Convenience Methods
-    
-    /// Provides button tap haptic feedback
-    func buttonTapped() {
-        provideFeedback(for: .button)
+    func bouncyPress() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
     }
     
-    /// Provides success haptic feedback
-    func success() {
-        provideFeedback(for: .success)
+    func bouncyRelease() {
+        let generator = UIImpactFeedbackGenerator(style: .rigid)
+        generator.impactOccurred()
     }
     
-    /// Provides value changed haptic feedback
-    func valueChanged() {
-        provideFeedback(for: .selection)
+    func focusChanged() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
     }
     
-    /// Provides template created haptic feedback
-    func templateCreated() {
-        provideFeedback(for: .success)
+    /// Provides feedback for increment actions
+    func incrementValue() {
+        guard isEnabled else { return }
+        
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
     }
     
-    /// Provides error haptic feedback
-    func error() {
-        provideFeedback(for: .error)
+    /// Provides feedback for decrement actions
+    func decrementValue() {
+        guard isEnabled else { return }
+        
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+    }
+    
+    /// Provides celebration feedback
+    func celebration() {
+        guard isEnabled else { return }
+        
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.impactOccurred()
+        
+        // Add a slight delay and another impact for celebration effect
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            generator.impactOccurred()
+        }
     }
 }

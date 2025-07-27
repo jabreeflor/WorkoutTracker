@@ -121,7 +121,7 @@ struct ModernDataManagementView: View {
     private func formatSelectionRow(_ format: ExportFormat) -> some View {
         Button(action: {
             selectedExportFormat = format
-            HapticService.shared.buttonTapped()
+            HapticService.shared.provideFeedback(for: .button)
         }) {
             HStack(spacing: 16) {
                 Image(systemName: format.icon)
@@ -350,7 +350,7 @@ struct ModernDataManagementView: View {
                     exportedData = data
                     isExporting = false
                     showingShareSheet = true
-                    HapticService.shared.success()
+                    HapticService.shared.provideFeedback(for: .success)
                 }
             } catch {
                 await MainActor.run {

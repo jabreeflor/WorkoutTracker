@@ -23,15 +23,25 @@ struct EnhancedExerciseView: View {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     ForEach(Array(setTrackingService.activeSets.enumerated()), id: \.element.id) { index, set in
-                        SetRowView(
-                            set: set,
-                            previousSet: setTrackingService.previousWorkoutSets?.first(where: { $0.setNumber == set.setNumber }),
+                        EnhancedSetRowView(
+                            setData: Binding(
+                                get: { set },
+                                set: { newValue in
+                                    var updatedSets = setTrackingService.activeSets
+                                    updatedSets[index] = newValue
+                                    setTrackingService.updateSet(at: index, with: newValue)
+                                }
+                            ),
+                            previousSetData: setTrackingService.previousWorkoutSets?.first(where: { $0.setNumber == set.setNumber }),
                             isActive: index == setTrackingService.currentSetIndex,
-                            onComplete: { weight, reps in
-                                setTrackingService.completeSet(at: index, weight: weight, reps: reps)
+                            onSetCompleted: {
+                                setTrackingService.completeSet(at: index)
                             },
-                            onUpdate: { weight, reps in
-                                setTrackingService.updateTargetValues(at: index, weight: weight, reps: reps)
+                            onStartRestTimer: { duration in
+                                // This will be ignored as the SetTrackingService handles rest timer start
+                            },
+                            onValueChange: { newValue in
+                                setTrackingService.updateSet(at: index, with: newValue)
                             }
                         )
                         .contextMenu {

@@ -208,11 +208,11 @@ struct TemplateBuilderView: View {
         
         do {
             try viewContext.save()
-            HapticService.shared.templateCreated()
+            HapticService.shared.provideFeedback(for: .success)
             dismiss()
         } catch {
             print("Error saving template: \(error)")
-            HapticService.shared.error()
+            HapticService.shared.provideFeedback(for: .error)
         }
     }
 }

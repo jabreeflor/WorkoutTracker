@@ -8,39 +8,12 @@ extension View {
     ///   - duration: The duration of the animation
     /// - Returns: A view with bounce animation
     func bounceOnTap(scale: CGFloat = 0.95, duration: Double = 0.1) -> some View {
-        self.modifier(BouncyButtonModifier(scale: scale, duration: duration))
+        self.bouncyPress(scale: scale, hapticFeedback: true)
     }
 }
 
 // MARK: - Animation Modifiers
-struct BouncyButtonModifier: ViewModifier {
-    let scale: CGFloat
-    let duration: Double
-    
-    @State private var isPressed = false
-    
-    func body(content: Content) -> some View {
-        content
-            .scaleEffect(isPressed ? scale : 1.0)
-            .animation(.easeInOut(duration: duration), value: isPressed)
-            .onTapGesture {
-                withAnimation {
-                    isPressed = true
-                }
-                
-                // Provide haptic feedback
-                let generator = UIImpactFeedbackGenerator(style: .light)
-                generator.impactOccurred()
-                
-                // Reset after animation
-                DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-                    withAnimation {
-                        isPressed = false
-                    }
-                }
-            }
-    }
-}
+// Note: BouncyButtonModifier is now defined in View+BouncyAnimations.swift
 
 // MARK: - Haptic Feedback
 enum HapticFeedbackType {

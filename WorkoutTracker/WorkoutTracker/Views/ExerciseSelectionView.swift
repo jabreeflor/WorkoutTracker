@@ -20,9 +20,6 @@ struct ExerciseSelectionView: View {
     var body: some View {
         NavigationView {
             VStack {
-                SearchBar(text: $searchText)
-                    .padding(.horizontal)
-                
                 List(filteredExercises, id: \.id) { exercise in
                     Button(action: {
                         addExercise(exercise)
@@ -54,6 +51,7 @@ struct ExerciseSelectionView: View {
                     }
                 }
             }
+            .searchable(text: $searchText, prompt: "Search exercises...")
             .navigationTitle("Select Exercise")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -30,10 +30,18 @@ struct RestTimerView: View {
                         .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: animateTimer)
                 }
                 
-                Text("Rest Timer")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.blue)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Rest Timer")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.blue)
+                    
+                    if let restTimeSource = timerService.restTimeSource {
+                        Text(restTimeSource.description)
+                            .font(.caption)
+                            .foregroundColor(restTimeSource.color)
+                    }
+                }
                 
                 Spacer()
                 
@@ -86,7 +94,7 @@ struct RestTimerView: View {
             // Enhanced control buttons matching the image design
             HStack(spacing: 20) {
                 // Reduce time button
-                TimerControlButton(
+                BasicTimerControlButton(
                     icon: "minus.circle.fill",
                     text: "-15s",
                     color: .red,
@@ -101,7 +109,7 @@ struct RestTimerView: View {
                 )
                 
                 // Pause/Resume button (larger)
-                TimerControlButton(
+                BasicTimerControlButton(
                     icon: timerService.isPaused ? "play.circle.fill" : "pause.circle.fill",
                     text: timerService.isPaused ? "Resume" : "Pause",
                     color: .blue,
@@ -118,7 +126,7 @@ struct RestTimerView: View {
                 )
                 
                 // Skip button
-                TimerControlButton(
+                BasicTimerControlButton(
                     icon: "forward.end.circle.fill",
                     text: "Skip",
                     color: .gray,
@@ -130,7 +138,7 @@ struct RestTimerView: View {
                 )
                 
                 // Add time button
-                TimerControlButton(
+                BasicTimerControlButton(
                     icon: "plus.circle.fill",
                     text: "+15s",
                     color: .green,
@@ -182,8 +190,8 @@ struct RestTimerView: View {
     }
 }
 
-// MARK: - Timer Control Button Component
-struct TimerControlButton: View {
+// MARK: - Basic Timer Control Button Component
+struct BasicTimerControlButton: View {
     let icon: String
     let text: String
     let color: Color
